@@ -5,8 +5,7 @@ import { useRef, useState } from "react";
 import * as THREE from "three";
 
 import { getSafetyResponse, type SafetyZone } from "./neythalAI";
-
-import { getChatResponse } from "./neythalChat";
+import NeythalChatbot from "./components/NeythalChatbot";
 
 /* =========================================================
    OCEAN
@@ -622,162 +621,11 @@ function GlobalHeader({
   );
 }
 
-/* =========================================================
-   FLOATING NEYTHAL CHATBOT
-========================================================= */
-
-function FloatingNeythal({
-  safetyZone,
-  aiMessage,
-  isSpeaking,
-  speakNeythal,
-  setAiMessage,
-  open,
-  setOpen,
-}: {
-  safetyZone: SafetyZone;
-  aiMessage: string;
-  isSpeaking: boolean;
-  speakNeythal: (text: string) => void;
-  setAiMessage: React.Dispatch<React.SetStateAction<string>>;
-  open: boolean;
-  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-}) {
-  const response = getSafetyResponse(safetyZone);
-  const [userMessage, setUserMessage] = useState("");
-  const handleChat = () => {
-    if (!userMessage.trim()) {
-      return;
-    }
-
-    const response = getChatResponse(userMessage, safetyZone);
-
-    setAiMessage(response.tamil);
-
-    setUserMessage("");
-
-    speakNeythal(response.tamil);
-  };
-
-  return (
-    <>
-      {!open && (
-        <button
-          type="button"
-          className={`neythal-floating-button ${safetyZone.toLowerCase()}`}
-          onClick={() => setOpen(true)}
-          aria-label="Open Neythal AI"
-        >
-          <span className="neythal-floating-pulse" />
-
-          <span className="neythal-floating-icon">N</span>
-
-          <span className="neythal-floating-label">NEYTHAL AI</span>
-        </button>
-      )}
-
-      {open && (
-        <aside className={`neythal-chat-window ${safetyZone.toLowerCase()}`}>
-          <div className="neythal-chat-header">
-            <div className="neythal-chat-brand">
-              <div className="neythal-chat-avatar">N</div>
-
-              <div>
-                <strong>NEYTHAL AI</strong>
-
-                <span>MARITIME SAFETY COPILOT</span>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              className="neythal-chat-close"
-              onClick={() => setOpen(false)}
-              aria-label="Close Neythal AI"
-            >
-              ×
-            </button>
-          </div>
-
-          <div className="neythal-chat-status">
-            <span />
-
-            <strong>{safetyZone}</strong>
-
-            <small>LIVE MONITORING</small>
-          </div>
-
-          <div className="neythal-chat-message">
-            <span className="neythal-chat-label">NEYTHAL AI</span>
-
-            <p>{aiMessage}</p>
-
-            <div className="neythal-chat-tanglish">{response.tanglish}</div>
-          </div>
-
-          <div className="neythal-chat-actions">
-            <button
-              type="button"
-              onClick={() => {
-                speakNeythal(response.tamil);
-              }}
-            >
-              🔊
-              <span>{isSpeaking ? "SPEAKING..." : "REPEAT"}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setAiMessage(
-                  "Naan unga current safety status monitor pannitu irukken.",
-                );
-              }}
-            >
-              <span>ASK NEYTHAL</span>
-            </button>
-          </div>
-
-          <div className="neythal-chat-input">
-            <input
-              type="text"
-              value={userMessage}
-              onChange={(event) => setUserMessage(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  handleChat();
-                }
-              }}
-              placeholder="Ask Neythal..."
-            />
-
-            <button type="button" onClick={handleChat}>
-              ↑
-            </button>
-          </div>
-          <div className="neythal-chat-footer">
-            <span>● GPS</span>
-
-            <span>● GEOFENCE</span>
-
-            <span>தமிழ்</span>
-          </div>
-        </aside>
-      )}
-    </>
-  );
-}
 export default function App() {
   const [showSOS, setShowSOS] = useState(false);
   const [safetyZone, setSafetyZone] = useState<SafetyZone>("SAFE");
 
   const [chatOpen, setChatOpen] = useState(false);
-
-  const [aiMessage, setAiMessage] = useState(
-    "Vanakkam! Naan Neythal AI. Ungaloda maritime safety-ku naan help panren.",
-  );
-
-  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const [isConnected, setIsConnected] = useState(true);
 
@@ -794,14 +642,6 @@ export default function App() {
     speech.rate = 0.92;
     speech.pitch = 1;
 
-    speech.onstart = () => {
-      setIsSpeaking(true);
-    };
-
-    speech.onend = () => {
-      setIsSpeaking(false);
-    };
-
     window.speechSynthesis.speak(speech);
   };
 
@@ -809,11 +649,6 @@ export default function App() {
     setSafetyZone(zone);
 
     const response = getSafetyResponse(zone);
-
-    /*
-      Update chatbot
-    */
-    setAiMessage(response.tamil);
 
     /*
       Speak Tamil warning
@@ -1351,12 +1186,8 @@ export default function App() {
         <MaritimeMap onSafetyChange={handleSafetyChange} />
       </section>
 
-      <FloatingNeythal
+      <NeythalChatbot
         safetyZone={safetyZone}
-        aiMessage={aiMessage}
-        isSpeaking={isSpeaking}
-        speakNeythal={speakNeythal}
-        setAiMessage={setAiMessage}
         open={chatOpen}
         setOpen={setChatOpen}
       />

@@ -73,3 +73,30 @@ export default defineConfig([
 ])
 
 ```
+
+## Running the local Neythal chatbot
+
+The chatbot sends requests to a local `llama-server`; the GGUF model is not part
+of this repository. Start the server with your locally stored model, for example:
+
+```powershell
+llama-server -m "C:\models\Qwen3-0.6B-Q8_0.gguf" --host 127.0.0.1 --port 8080
+```
+
+Then, in the project directory, start the website:
+
+```powershell
+npm ci
+npm run dev
+```
+
+Vite's development proxy forwards `/api/llama` requests to the local server.
+The maritime knowledge file is `public/neythal_maritime_knowledge.json`; replace
+its empty array with the supplied entries. Entries can include `question`,
+`answer`, `category`, `tags`, and `content` fields. Localized text fields may be
+strings or objects keyed by language (`en`, `ta`, or `ml`). If the server is
+unavailable, Neythal uses the best matching local answer; if no matching answer
+is available, it shows a safety-focused error instead of inventing live data.
+
+The Vite proxy is development-only. A deployed website needs a same-origin
+server proxy to llama.cpp or another explicitly configured API route.

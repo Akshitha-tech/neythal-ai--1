@@ -319,15 +319,14 @@ export default function MaritimeMap({
     initialBoatPosition
   );
 
-  const [
-    safetyZone,
-    setSafetyZone,
-  ] = useState<SafetyZone>("SAFE");
+  const boundaryDistance =
+    getNearestBoundaryDistance(boatPosition);
 
-  const [
-    boundaryDistance,
-    setBoundaryDistance,
-  ] = useState(0);
+  const safetyZone =
+    calculateSafetyZone(boundaryDistance);
+
+  const previousSafetyZone =
+    useRef<SafetyZone>(safetyZone);
 
   const [
     boatTrail,
@@ -368,25 +367,11 @@ export default function MaritimeMap({
   ======================================================= */
 
   useEffect(() => {
-    const distance =
-      getNearestBoundaryDistance(
-        boatPosition
-      );
-
-    setBoundaryDistance(distance);
-
-    const newZone =
-      calculateSafetyZone(distance);
-
-    if (newZone !== safetyZone) {
-      setSafetyZone(newZone);
-
-      onSafetyChange?.(
-        newZone
-      );
+    if (previousSafetyZone.current !== safetyZone) {
+      previousSafetyZone.current = safetyZone;
+      onSafetyChange?.(safetyZone);
     }
   }, [
-    boatPosition,
     safetyZone,
     onSafetyChange,
   ]);

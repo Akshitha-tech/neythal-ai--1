@@ -1,0 +1,503 @@
+.neythal-bot-launcher,
+.neythal-chatbot {
+  --bot-bg: #06151b;
+  --bot-panel: rgba(5, 20, 27, 0.97);
+  --bot-cyan: #43d9dd;
+  --bot-text: #e9ffff;
+  --bot-muted: rgba(233, 255, 255, 0.54);
+  color: var(--bot-text);
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.neythal-bot-launcher {
+  position: fixed;
+  z-index: 10000;
+  right: 28px;
+  bottom: 26px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 58px;
+  padding: 8px 17px 8px 9px;
+  border: 1px solid rgba(67, 217, 221, 0.55);
+  border-radius: 999px;
+  background: rgba(3, 22, 29, 0.94);
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.42), 0 0 22px rgba(67, 217, 221, 0.15);
+  color: var(--bot-text);
+  font-family: "DM Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  backdrop-filter: blur(14px);
+}
+
+.neythal-bot-launcher:hover {
+  border-color: var(--bot-cyan);
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.5), 0 0 26px rgba(67, 217, 221, 0.24);
+}
+
+.neythal-bot-launcher-mark,
+.neythal-chatbot__avatar {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(67, 217, 221, 0.75);
+  border-radius: 50%;
+  color: var(--bot-cyan);
+  font-family: "DM Mono", monospace;
+  font-size: 15px;
+  box-shadow: inset 0 0 15px rgba(67, 217, 221, 0.08);
+}
+
+.neythal-bot-launcher-pulse {
+  position: absolute;
+  left: 9px;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(67, 217, 221, 0.6);
+  border-radius: 50%;
+  animation: neythal-chat-pulse 2s ease-out infinite;
+  pointer-events: none;
+}
+
+.neythal-chatbot {
+  position: fixed;
+  z-index: 10000;
+  right: 26px;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  width: min(405px, calc(100vw - 32px));
+  height: min(650px, calc(100dvh - 48px));
+  min-height: 390px;
+  overflow: hidden;
+  border: 1px solid rgba(67, 217, 221, 0.31);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(8, 124, 145, 0.15), transparent 36%),
+    var(--bot-panel);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.62), 0 0 32px rgba(0, 180, 200, 0.1);
+  backdrop-filter: blur(22px);
+}
+
+.neythal-chatbot button,
+.neythal-chatbot select,
+.neythal-chatbot textarea {
+  font: inherit;
+}
+
+.neythal-chatbot button {
+  color: inherit;
+}
+
+.neythal-chatbot__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 68px;
+  padding: 12px 15px;
+  border-bottom: 1px solid rgba(67, 217, 221, 0.14);
+}
+
+.neythal-chatbot__identity,
+.neythal-chatbot__header-actions,
+.neythal-chatbot__toolbar,
+.neythal-chatbot__zone {
+  display: flex;
+  align-items: center;
+}
+
+.neythal-chatbot__identity {
+  gap: 11px;
+}
+
+.neythal-chatbot__identity strong,
+.neythal-chatbot__identity small {
+  display: block;
+}
+
+.neythal-chatbot__identity strong {
+  font-family: "DM Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+}
+
+.neythal-chatbot__identity small {
+  margin-top: 5px;
+  color: var(--bot-muted);
+  font-family: "DM Mono", monospace;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+}
+
+.neythal-chatbot__header-actions {
+  gap: 7px;
+}
+
+.neythal-chatbot__header-actions button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(67, 217, 221, 0.15);
+  border-radius: 9px;
+  background: rgba(67, 217, 221, 0.04);
+  color: var(--bot-muted);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.neythal-chatbot__header-actions button:hover:not(:disabled) {
+  border-color: rgba(67, 217, 221, 0.55);
+  color: var(--bot-cyan);
+}
+
+.neythal-chatbot__header-actions button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.neythal-chatbot__toolbar {
+  justify-content: space-between;
+  padding: 10px 15px 7px;
+}
+
+.neythal-chatbot__zone {
+  gap: 7px;
+  color: var(--bot-cyan);
+  font-family: "DM Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+}
+
+.neythal-chatbot__zone i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 9px currentColor;
+}
+
+.neythal-chatbot__toolbar select {
+  max-width: 130px;
+  padding: 6px 24px 6px 9px;
+  border: 1px solid rgba(67, 217, 221, 0.2);
+  border-radius: 7px;
+  outline: none;
+  background: #0b2028;
+  color: var(--bot-text);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.neythal-chatbot__toolbar option {
+  background: #0b2028;
+  color: var(--bot-text);
+}
+
+.neythal-chatbot__notice {
+  margin: 0;
+  padding: 0 15px 10px;
+  color: rgba(233, 255, 255, 0.39);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.neythal-chatbot__messages {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px 14px 14px;
+  scrollbar-color: rgba(67, 217, 221, 0.26) transparent;
+  scrollbar-width: thin;
+}
+
+.neythal-chatbot__message {
+  position: relative;
+  max-width: 92%;
+  margin: 0 0 13px;
+  padding: 11px 12px;
+  border: 1px solid rgba(67, 217, 221, 0.11);
+  border-radius: 12px 12px 12px 4px;
+  background: rgba(67, 217, 221, 0.055);
+}
+
+.neythal-chatbot__message--user {
+  margin-left: auto;
+  border-color: rgba(67, 217, 221, 0.22);
+  border-radius: 12px 12px 4px 12px;
+  background: rgba(67, 217, 221, 0.13);
+}
+
+.neythal-chatbot__message-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--bot-cyan);
+  font-family: "DM Mono", monospace;
+  font-size: 8px;
+  letter-spacing: 0.11em;
+}
+
+.neythal-chatbot__message--user .neythal-chatbot__message-label {
+  color: rgba(233, 255, 255, 0.55);
+}
+
+.neythal-chatbot__message p {
+  margin: 7px 0 0;
+  padding-right: 24px;
+  color: rgba(233, 255, 255, 0.88);
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.neythal-chatbot__source {
+  padding: 3px 5px;
+  border: 1px solid rgba(245, 215, 110, 0.22);
+  border-radius: 5px;
+  color: #f5d76e;
+  font-size: 7px;
+}
+
+.neythal-chatbot__source--safe {
+  border-color: rgba(255, 157, 87, 0.3);
+  color: #ffb37e;
+}
+
+.neythal-chatbot__speak {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: grid;
+  place-items: center;
+  width: 23px;
+  height: 23px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--bot-cyan) !important;
+  cursor: pointer;
+}
+
+.neythal-chatbot__suggestions {
+  display: grid;
+  gap: 7px;
+  margin-top: 18px;
+}
+
+.neythal-chatbot__suggestions > span {
+  margin-bottom: 2px;
+  color: var(--bot-muted);
+  font-family: "DM Mono", monospace;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+}
+
+.neythal-chatbot__suggestions button {
+  padding: 9px 10px;
+  border: 1px solid rgba(67, 217, 221, 0.17);
+  border-radius: 8px;
+  background: rgba(2, 11, 14, 0.42);
+  color: rgba(233, 255, 255, 0.8);
+  font-size: 11px;
+  line-height: 1.45;
+  text-align: left;
+  cursor: pointer;
+}
+
+.neythal-chatbot__suggestions button:hover:not(:disabled) {
+  border-color: rgba(67, 217, 221, 0.5);
+  background: rgba(67, 217, 221, 0.08);
+}
+
+.neythal-chatbot__typing {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: fit-content;
+  max-width: 95%;
+  margin: 5px 0 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(67, 217, 221, 0.12);
+  border-radius: 11px;
+  color: var(--bot-muted);
+  font-size: 10px;
+}
+
+.neythal-chatbot__dots {
+  display: flex;
+  gap: 3px;
+}
+
+.neythal-chatbot__dots i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--bot-cyan);
+  animation: neythal-chat-bounce 1s infinite alternate;
+}
+
+.neythal-chatbot__dots i:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.neythal-chatbot__dots i:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.neythal-chatbot__error {
+  display: grid;
+  gap: 9px;
+  margin: 10px 0;
+  padding: 11px;
+  border: 1px solid rgba(255, 95, 110, 0.35);
+  border-radius: 9px;
+  background: rgba(110, 21, 33, 0.16);
+  color: #ffb3ba;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.neythal-chatbot__error button {
+  justify-self: start;
+  padding: 5px 8px;
+  border: 1px solid rgba(255, 179, 186, 0.3);
+  border-radius: 6px;
+  background: transparent;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.neythal-chatbot__composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 7px;
+  padding: 11px;
+  border-top: 1px solid rgba(67, 217, 221, 0.12);
+  background: rgba(2, 11, 14, 0.42);
+}
+
+.neythal-chatbot__composer textarea {
+  flex: 1;
+  min-width: 0;
+  max-height: 100px;
+  resize: vertical;
+  padding: 10px 11px;
+  border: 1px solid rgba(67, 217, 221, 0.2);
+  border-radius: 9px;
+  outline: none;
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--bot-text);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.neythal-chatbot__composer textarea:focus {
+  border-color: rgba(67, 217, 221, 0.55);
+}
+
+.neythal-chatbot__composer textarea::placeholder {
+  color: rgba(233, 255, 255, 0.35);
+}
+
+.neythal-chatbot__voice,
+.neythal-chatbot__send {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 39px;
+  height: 39px;
+  border: 1px solid rgba(67, 217, 221, 0.22);
+  border-radius: 9px;
+  background: rgba(67, 217, 221, 0.06);
+  color: var(--bot-cyan) !important;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.neythal-chatbot__voice.is-listening {
+  border-color: #ff6374;
+  color: #ff6374 !important;
+  animation: neythal-chat-pulse 1s infinite;
+}
+
+.neythal-chatbot__send {
+  border-color: var(--bot-cyan);
+  background: var(--bot-cyan);
+  color: #021014 !important;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.neythal-chatbot__send:disabled,
+.neythal-chatbot__voice:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.neythal-chatbot__footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 14px 10px;
+  color: rgba(233, 255, 255, 0.35);
+  font-family: "DM Mono", monospace;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+}
+
+.neythal-chatbot__visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes neythal-chat-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(67, 217, 221, 0.28);
+  }
+  100% {
+    box-shadow: 0 0 0 9px rgba(67, 217, 221, 0);
+  }
+}
+
+@keyframes neythal-chat-bounce {
+  to {
+    opacity: 0.35;
+    transform: translateY(-3px);
+  }
+}
+
+@media (max-width: 520px) {
+  .neythal-chatbot {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    width: auto;
+    height: min(680px, calc(100dvh - 20px));
+    min-height: 350px;
+    border-radius: 14px;
+  }
+
+  .neythal-bot-launcher {
+    right: 16px;
+    bottom: 16px;
+  }
+}
+
+@media (max-height: 500px) and (max-width: 800px) {
+  .neythal-chatbot {
+    height: calc(100dvh - 12px);
+    min-height: 0;
+    bottom: 6px;
+  }
+}

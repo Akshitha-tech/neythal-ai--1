@@ -1,0 +1,412 @@
+{
+  "dataset_name": "Neythal Maritime Safety Knowledge Base",
+  "version": "0.1.0",
+  "purpose": "Initial offline retrieval knowledge base for fishing safety, weather, ocean conditions, IMBL/border awareness, SOS/emergency response, and fishing intelligence.",
+  "scope_note": "This is a static knowledge base. It must not be treated as a source of live weather, live ocean conditions, current PFZ positions, or current official warnings. Live warnings should come from official IMD/INCOIS services when connectivity is available.",
+  "languages": [
+    "en",
+    "ta",
+    "ml"
+  ],
+  "sources": [
+    {
+      "name": "INCOIS Potential Fishing Zone Advisory",
+      "organization": "Indian National Centre for Ocean Information Services",
+      "url": "https://incois.gov.in/MarineFisheries/PfzAdvisory"
+    },
+    {
+      "name": "INCOIS Marine Fisheries Advisory Text Data",
+      "organization": "Indian National Centre for Ocean Information Services",
+      "url": "https://incois.gov.in/MarineFisheries/TextDataHome?mfid=1&request_locale=en"
+    },
+    {
+      "name": "IMD Fishermen Warnings",
+      "organization": "India Meteorological Department",
+      "url": "https://mausam.imd.gov.in/imd_latest/contents/index_fisherman.php"
+    },
+    {
+      "name": "IMD Marine Forecast",
+      "organization": "India Meteorological Department",
+      "url": "https://mausam.imd.gov.in/responsive/marine_forecast.php"
+    }
+  ],
+  "entries": [
+    {
+      "id": "FS001",
+      "category": "fishing_safety",
+      "tags": [
+        "storm",
+        "cyclone",
+        "fishing"
+      ],
+      "question": {
+        "en": "What should a fisherman do when a storm or cyclone warning is issued?",
+        "ta": "புயல் அல்லது சூறாவளி எச்சரிக்கை விடுக்கப்பட்டால் மீனவர் என்ன செய்ய வேண்டும்?",
+        "ml": "കൊടുങ്കാറ്റ് അല്ലെങ്കിൽ ചുഴലിക്കാറ്റ് മുന്നറിയിപ്പ് ലഭിച്ചാൽ മത്സ്യത്തൊഴിലാളി എന്ത് ചെയ്യണം?"
+      },
+      "answer": {
+        "en": "Do not venture into the warned sea area. If already at sea, follow official instructions and move toward a safe port or sheltered area as conditions and authorities permit. Secure the vessel and equipment and keep communication equipment ready.",
+        "ta": "எச்சரிக்கப்பட்ட கடல் பகுதிக்குள் செல்ல வேண்டாம். ஏற்கனவே கடலில் இருந்தால், அதிகாரிகளின் அறிவுறுத்தல்களைப் பின்பற்றி, நிலைமை மற்றும் பாதுகாப்பு வழிமுறைகளுக்கு ஏற்ப பாதுகாப்பான துறைமுகம் அல்லது பாதுகாப்பான இடத்தை நோக்கி செல்லுங்கள். படகு மற்றும் உபகரணங்களை பாதுகாப்பாக வைத்துக் கொண்டு தொடர்பு சாதனங்களை தயாராக வைத்திருங்கள்.",
+        "ml": "മുന്നറിയിപ്പ് നൽകിയ കടൽ മേഖലയിലേക്ക് പോകരുത്. ഇതിനകം കടലിലാണെങ്കിൽ അധികൃതരുടെ നിർദ്ദേശങ്ങൾ പാലിച്ച്, സാഹചര്യവും സുരക്ഷാ നിർദ്ദേശങ്ങളും അനുസരിച്ച് സുരക്ഷിതമായ തുറമുഖത്തേക്കോ അഭയപ്രദേശത്തേക്കോ മടങ്ങുക. ബോട്ടും ഉപകരണങ്ങളും സുരക്ഷിതമാക്കി ആശയവിനിമയ ഉപകരണങ്ങൾ തയ്യാറായി സൂക്ഷിക്കുക."
+      },
+      "source_ids": [
+        "IMD_FISHERMEN_WARNING"
+      ]
+    },
+    {
+      "id": "FS002",
+      "category": "fishing_safety",
+      "tags": [
+        "rough_sea",
+        "waves",
+        "small_boat"
+      ],
+      "question": {
+        "en": "What should I do when the sea becomes rough?",
+        "ta": "கடல் மிகவும் கொந்தளிப்பாக இருந்தால் என்ன செய்ய வேண்டும்?",
+        "ml": "കടൽ വളരെ പ്രക്ഷുബ്ധമായാൽ എന്ത് ചെയ്യണം?"
+      },
+      "answer": {
+        "en": "Avoid unnecessary exposure to rough sea conditions. Follow the latest official marine warning and return or remain in a safe harbor when advised. Small vessels require particular caution in rough or very rough conditions.",
+        "ta": "கொந்தளிப்பான கடல் நிலைமைகளில் தேவையில்லாமல் கடலுக்குச் செல்ல வேண்டாம். சமீபத்திய அதிகாரப்பூர்வ கடல் எச்சரிக்கையைப் பின்பற்றி, அறிவுறுத்தப்பட்டால் பாதுகாப்பான துறைமுகத்திற்குத் திரும்புங்கள் அல்லது அங்கேயே இருங்கள். சிறிய படகுகள் கொந்தளிப்பான அல்லது மிகவும் கொந்தளிப்பான கடலில் கூடுதல் கவனம் தேவை.",
+        "ml": "പ്രക്ഷുബ്ധമായ കടൽ സാഹചര്യങ്ങളിൽ അനാവശ്യമായി കടലിൽ തുടരരുത്. ഏറ്റവും പുതിയ ഔദ്യോഗിക സമുദ്ര മുന്നറിയിപ്പ് പാലിച്ച്, നിർദ്ദേശമുണ്ടെങ്കിൽ സുരക്ഷിതമായ തുറമുഖത്തേക്ക് മടങ്ങുകയോ അവിടെ തുടരുകയോ ചെയ്യുക. ചെറിയ ബോട്ടുകൾക്ക് പ്രക്ഷുബ്ധമായോ വളരെ പ്രക്ഷുബ്ധമായോ കടലിൽ പ്രത്യേക ജാഗ്രത ആവശ്യമാണ്."
+      },
+      "source_ids": [
+        "IMD_MARINE_FORECAST"
+      ]
+    },
+    {
+      "id": "FS003",
+      "category": "fishing_safety",
+      "tags": [
+        "life_jacket",
+        "crew",
+        "emergency"
+      ],
+      "question": {
+        "en": "What basic safety equipment should a fishing crew keep ready?",
+        "ta": "மீன்பிடி குழு எந்த அடிப்படை பாதுகாப்பு உபகரணங்களை தயாராக வைத்திருக்க வேண்டும்?",
+        "ml": "മത്സ്യബന്ധന സംഘത്തിന് ഏത് അടിസ്ഥാന സുരക്ഷാ ഉപകരണങ്ങൾ തയ്യാറായി സൂക്ഷിക്കണം?"
+      },
+      "answer": {
+        "en": "Keep appropriate life-saving equipment, communication equipment, navigation equipment, emergency supplies, and a first-aid kit ready. Check equipment before departure and make sure the crew knows how to use it.",
+        "ta": "பொருத்தமான உயிர்காக்கும் உபகரணங்கள், தொடர்பு சாதனங்கள், வழிசெலுத்தல் சாதனங்கள், அவசரப் பொருட்கள் மற்றும் முதலுதவி பெட்டி ஆகியவற்றை தயாராக வைத்திருக்க வேண்டும். புறப்படும் முன் அவற்றைச் சரிபார்த்து, குழுவினருக்கு அவற்றைப் பயன்படுத்தத் தெரியும் என்பதை உறுதி செய்யுங்கள்.",
+        "ml": "അനുയോജ്യമായ ജീവൻരക്ഷാ ഉപകരണങ്ങൾ, ആശയവിനിമയ ഉപകരണങ്ങൾ, നാവിഗേഷൻ ഉപകരണങ്ങൾ, അടിയന്തര സാധനങ്ങൾ, പ്രഥമശുശ്രൂഷാ കിറ്റ് എന്നിവ തയ്യാറായി സൂക്ഷിക്കുക. പുറപ്പെടുന്നതിന് മുമ്പ് ഉപകരണങ്ങൾ പരിശോധിക്കുകയും സംഘാംഗങ്ങൾക്ക് അവ ഉപയോഗിക്കാൻ അറിയാമെന്ന് ഉറപ്പാക്കുകയും ചെയ്യുക."
+      },
+      "source_ids": [
+        "IMD_FISHERMEN_WARNING"
+      ]
+    },
+    {
+      "id": "WX001",
+      "category": "weather",
+      "tags": [
+        "warning",
+        "official",
+        "forecast"
+      ],
+      "question": {
+        "en": "Where should I check official fishermen weather warnings?",
+        "ta": "மீனவர்களுக்கான அதிகாரப்பூர்வ வானிலை எச்சரிக்கைகளை எங்கு பார்க்கலாம்?",
+        "ml": "മത്സ്യത്തൊഴിലാളികൾക്കുള്ള ഔദ്യോഗിക കാലാവസ്ഥാ മുന്നറിയിപ്പുകൾ എവിടെ പരിശോധിക്കാം?"
+      },
+      "answer": {
+        "en": "Check India Meteorological Department (IMD) fishermen warnings and marine forecasts. The warning area should be matched to the fisherman's sea location.",
+        "ta": "இந்திய வானிலை ஆய்வு துறையின் (IMD) மீனவர் எச்சரிக்கைகள் மற்றும் கடல் வானிலை முன்னறிவிப்புகளைப் பார்க்கவும். எச்சரிக்கை பகுதி மீனவர் இருக்கும் கடல் பகுதியுடன் பொருந்துகிறதா என்பதைச் சரிபார்க்க வேண்டும்.",
+        "ml": "ഇന്ത്യൻ കാലാവസ്ഥാ വകുപ്പ് (IMD) നൽകുന്ന മത്സ്യത്തൊഴിലാളി മുന്നറിയിപ്പുകളും സമുദ്ര കാലാവസ്ഥാ പ്രവചനങ്ങളും പരിശോധിക്കുക. മുന്നറിയിപ്പ് ബാധിക്കുന്ന കടൽ പ്രദേശം മത്സ്യത്തൊഴിലാളി ഉള്ള പ്രദേശവുമായി പൊരുത്തപ്പെടുന്നുണ്ടോ എന്ന് പരിശോധിക്കണം."
+      },
+      "source_ids": [
+        "IMD_FISHERMEN_WARNING",
+        "IMD_MARINE_FORECAST"
+      ]
+    },
+    {
+      "id": "WX002",
+      "category": "weather",
+      "tags": [
+        "wind",
+        "visibility",
+        "sea_state"
+      ],
+      "question": {
+        "en": "Why are wind, visibility and sea state important for fishing?",
+        "ta": "மீன்பிடிக்கும்போது காற்று, பார்வைத்திறன் மற்றும் கடல் நிலை ஏன் முக்கியம்?",
+        "ml": "മത്സ്യബന്ധനത്തിൽ കാറ്റ്, ദൃശ്യപരത, കടൽസ്ഥിതി എന്നിവ എന്തുകൊണ്ട് പ്രധാനമാണ്?"
+      },
+      "answer": {
+        "en": "They affect vessel handling, navigation and crew safety. Strong winds, poor visibility and rough seas can increase operational risk.",
+        "ta": "அவை படகை இயக்குதல், வழிசெலுத்தல் மற்றும் குழுவினரின் பாதுகாப்பை பாதிக்கின்றன. பலமான காற்று, குறைந்த பார்வைத்திறன் மற்றும் கொந்தளிப்பான கடல் செயல்பாட்டு அபாயத்தை அதிகரிக்கலாம்.",
+        "ml": "ഇവ ബോട്ട് നിയന്ത്രണം, നാവിഗേഷൻ, സംഘത്തിന്റെ സുരക്ഷ എന്നിവയെ ബാധിക്കുന്നു. ശക്തമായ കാറ്റ്, കുറഞ്ഞ ദൃശ്യപരത, പ്രക്ഷുബ്ധമായ കടൽ എന്നിവ പ്രവർത്തന അപകടസാധ്യത വർധിപ്പിക്കാം."
+      },
+      "source_ids": [
+        "IMD_MARINE_FORECAST"
+      ]
+    },
+    {
+      "id": "OC001",
+      "category": "ocean_conditions",
+      "tags": [
+        "wave_height",
+        "swell",
+        "sea_state"
+      ],
+      "question": {
+        "en": "What does wave height tell a fisherman?",
+        "ta": "அலை உயரம் மீனவருக்கு என்ன தகவலைத் தருகிறது?",
+        "ml": "തിരമാലയുടെ ഉയരം മത്സ്യത്തൊഴിലാളിക്ക് എന്ത് വിവരം നൽകുന്നു?"
+      },
+      "answer": {
+        "en": "Wave height indicates the size of waves expected in an area. Higher or worsening waves can make vessel operations more difficult and may increase risk, especially for small boats.",
+        "ta": "அலை உயரம் ஒரு பகுதியில் எதிர்பார்க்கப்படும் அலைகளின் அளவை குறிக்கிறது. அதிகரிக்கும் அல்லது உயரமான அலைகள் படகு இயக்கத்தை கடினமாக்கலாம்; குறிப்பாக சிறிய படகுகளுக்கு அபாயத்தை அதிகரிக்கலாம்.",
+        "ml": "ഒരു പ്രദേശത്ത് പ്രതീക്ഷിക്കുന്ന തിരമാലകളുടെ വലുപ്പം തിരമാലയുടെ ഉയരം സൂചിപ്പിക്കുന്നു. ഉയർന്നോ വർധിച്ചുകൊണ്ടിരിക്കുന്നതോ ആയ തിരമാലകൾ ബോട്ട് പ്രവർത്തനം ബുദ്ധിമുട്ടാക്കുകയും പ്രത്യേകിച്ച് ചെറിയ ബോട്ടുകൾക്ക് അപകടസാധ്യത വർധിപ്പിക്കുകയും ചെയ്യും."
+      },
+      "source_ids": [
+        "IMD_MARINE_FORECAST",
+        "INCOIS_OSF"
+      ]
+    },
+    {
+      "id": "OC002",
+      "category": "ocean_conditions",
+      "tags": [
+        "current",
+        "navigation"
+      ],
+      "question": {
+        "en": "Why are ocean currents important?",
+        "ta": "கடல் நீரோட்டங்கள் ஏன் முக்கியம்?",
+        "ml": "കടൽ പ്രവാഹങ്ങൾ എന്തുകൊണ്ട് പ്രധാനമാണ്?"
+      },
+      "answer": {
+        "en": "Currents can affect a vessel's movement and the time or effort needed to travel. Current alerts should be considered during navigation and marine operations.",
+        "ta": "கடல் நீரோட்டங்கள் படகின் இயக்கத்தையும் பயணத்திற்கு தேவையான நேரம் அல்லது முயற்சியையும் பாதிக்கலாம். வழிசெலுத்தல் மற்றும் கடல் செயல்பாடுகளின் போது நீரோட்ட எச்சரிக்கைகளை கவனத்தில் கொள்ள வேண்டும்.",
+        "ml": "കടൽ പ്രവാഹങ്ങൾ ബോട്ടിന്റെ ചലനത്തെയും യാത്രയ്ക്ക് ആവശ്യമായ സമയത്തെയും പരിശ്രമത്തെയും ബാധിക്കാം. നാവിഗേഷനും സമുദ്ര പ്രവർത്തനങ്ങളും നടത്തുമ്പോൾ പ്രവാഹ മുന്നറിയിപ്പുകൾ പരിഗണിക്കണം."
+      },
+      "source_ids": [
+        "IMD_MARINE_FORECAST",
+        "INCOIS_OSF"
+      ]
+    },
+    {
+      "id": "OC003",
+      "category": "ocean_conditions",
+      "tags": [
+        "sst",
+        "chlorophyll",
+        "pfz"
+      ],
+      "question": {
+        "en": "What are SST and chlorophyll used for in fishing advisories?",
+        "ta": "மீன்பிடி ஆலோசனைகளில் SST மற்றும் குளோரோஃபில் எதற்காக பயன்படுத்தப்படுகின்றன?",
+        "ml": "മത്സ്യബന്ധന ഉപദേശങ്ങളിൽ SSTയും ക്ലോറോഫിലും എന്തിനാണ് ഉപയോഗിക്കുന്നത്?"
+      },
+      "answer": {
+        "en": "INCOIS uses satellite-derived sea-surface temperature (SST) and chlorophyll information, along with other features, to identify Potential Fishing Zones (PFZ).",
+        "ta": "INCOIS செயற்கைக்கோள் மூலம் பெறப்படும் கடல் மேற்பரப்பு வெப்பநிலை (SST) மற்றும் குளோரோஃபில் தகவல்களை மற்ற கடல் அம்சங்களுடன் பயன்படுத்தி சாத்தியமான மீன்பிடி மண்டலங்களை (PFZ) அடையாளம் காண்கிறது.",
+        "ml": "INCOIS ഉപഗ്രഹത്തിൽ നിന്ന് ലഭിക്കുന്ന കടൽ ഉപരിതല താപനില (SST), ക്ലോറോഫിൽ വിവരങ്ങൾ എന്നിവയും മറ്റ് സമുദ്ര സവിശേഷതകളും ഉപയോഗിച്ച് സാധ്യതയുള്ള മത്സ്യബന്ധന മേഖലകൾ (PFZ) തിരിച്ചറിയുന്നു."
+      },
+      "source_ids": [
+        "INCOIS_PFZ"
+      ]
+    },
+    {
+      "id": "IMBL001",
+      "category": "imbl_border_safety",
+      "tags": [
+        "position",
+        "border",
+        "navigation"
+      ],
+      "question": {
+        "en": "What should I do when my vessel is approaching a maritime boundary or restricted area?",
+        "ta": "என் படகு கடல் எல்லை அல்லது கட்டுப்படுத்தப்பட்ட பகுதிக்கு அருகில் சென்றால் என்ன செய்ய வேண்டும்?",
+        "ml": "എന്റെ ബോട്ട് ഒരു സമുദ്ര അതിർത്തിയിലേക്കോ നിയന്ത്രിത മേഖലയിലേക്കോ സമീപിക്കുമ്പോൾ എന്ത് ചെയ്യണം?"
+      },
+      "answer": {
+        "en": "Check your position continuously, follow applicable navigation and maritime rules, and act early on any warning. Do not intentionally cross a maritime boundary or enter a restricted area.",
+        "ta": "உங்கள் படகின் இருப்பிடத்தை தொடர்ந்து சரிபார்த்து, பொருந்தும் வழிசெலுத்தல் மற்றும் கடல் விதிகளைப் பின்பற்றுங்கள். எச்சரிக்கை வந்தால் முன்கூட்டியே நடவடிக்கை எடுக்கவும். கடல் எல்லையை நோக்கமுடன் கடக்கவோ கட்டுப்படுத்தப்பட்ட பகுதிக்குள் செல்லவோ வேண்டாம்.",
+        "ml": "ബോട്ടിന്റെ സ്ഥാനം തുടർച്ചയായി പരിശോധിക്കുകയും ബാധകമായ നാവിഗേഷൻ, സമുദ്ര നിയമങ്ങൾ പാലിക്കുകയും ചെയ്യുക. മുന്നറിയിപ്പ് ലഭിച്ചാൽ നേരത്തെ നടപടി സ്വീകരിക്കുക. ഒരു സമുദ്ര അതിർത്തി ഉദ്ദേശപൂർവ്വം കടക്കുകയോ നിയന്ത്രിത മേഖലയിലേക്ക് പ്രവേശിക്കുകയോ ചെയ്യരുത്."
+      },
+      "source_ids": [
+        "NEYTHAL_DESIGN_PRINCIPLE"
+      ]
+    },
+    {
+      "id": "IMBL002",
+      "category": "imbl_border_safety",
+      "tags": [
+        "gps",
+        "distance",
+        "alert"
+      ],
+      "question": {
+        "en": "What information should a boundary safety alert contain?",
+        "ta": "கடல் எல்லை பாதுகாப்பு எச்சரிக்கையில் எந்த தகவல்கள் இருக்க வேண்டும்?",
+        "ml": "സമുദ്ര അതിർത്തി സുരക്ഷാ മുന്നറിയിപ്പിൽ എന്തെല്ലാം വിവരങ്ങൾ ഉണ്ടായിരിക്കണം?"
+      },
+      "answer": {
+        "en": "A useful alert should identify the vessel position, the relevant boundary or restricted area, approximate distance to it, risk level, and a clear recommended action.",
+        "ta": "ஒரு பயனுள்ள எச்சரிக்கையில் படகின் இருப்பிடம், தொடர்புடைய கடல் எல்லை அல்லது கட்டுப்படுத்தப்பட்ட பகுதி, அதற்கான தோராயமான தூரம், அபாய நிலை மற்றும் தெளிவான பரிந்துரைக்கப்பட்ட நடவடிக்கை இருக்க வேண்டும்.",
+        "ml": "ഉപയോഗപ്രദമായ മുന്നറിയിപ്പിൽ ബോട്ടിന്റെ സ്ഥാനം, ബന്ധപ്പെട്ട സമുദ്ര അതിർത്തി അല്ലെങ്കിൽ നിയന്ത്രിത മേഖല, അതിലേക്കുള്ള ഏകദേശ ദൂരം, അപകടനില, വ്യക്തമായ ശുപാർശ ചെയ്യുന്ന നടപടി എന്നിവ ഉണ്ടായിരിക്കണം."
+      },
+      "source_ids": [
+        "NEYTHAL_DESIGN_PRINCIPLE"
+      ]
+    },
+    {
+      "id": "SOS001",
+      "category": "sos_emergency",
+      "tags": [
+        "distress",
+        "sos",
+        "emergency"
+      ],
+      "question": {
+        "en": "What should I do in a serious emergency at sea?",
+        "ta": "கடலில் கடுமையான அவசரநிலை ஏற்பட்டால் என்ன செய்ய வேண்டும்?",
+        "ml": "കടലിൽ ഗുരുതരമായ അടിയന്തര സാഹചര്യം ഉണ്ടായാൽ എന്ത് ചെയ്യണം?"
+      },
+      "answer": {
+        "en": "Raise a distress alert using the available approved communication or distress equipment, give your position and situation as clearly as possible, and follow instructions from maritime emergency authorities. Keep the crew together when safe to do so.",
+        "ta": "கிடைக்கும் அங்கீகரிக்கப்பட்ட தொடர்பு அல்லது அவசர உதவி சாதனத்தைப் பயன்படுத்தி அவசர செய்தியை அனுப்புங்கள். உங்கள் இருப்பிடத்தையும் நிலைமையையும் முடிந்தவரை தெளிவாக தெரிவித்து, கடல் அவசர அதிகாரிகளின் அறிவுறுத்தல்களைப் பின்பற்றுங்கள். பாதுகாப்பாக இருந்தால் குழுவினரை ஒன்றாக வைத்திருங்கள்.",
+        "ml": "ലഭ്യമായ അംഗീകൃത ആശയവിനിമയ അല്ലെങ്കിൽ ദുരന്തസിഗ്നൽ ഉപകരണം ഉപയോഗിച്ച് അടിയന്തര സന്ദേശം അയയ്ക്കുക. നിങ്ങളുടെ സ്ഥാനവും സാഹചര്യവും കഴിയുന്നത്ര വ്യക്തമായി അറിയിച്ച് സമുദ്ര അടിയന്തര അധികാരികളുടെ നിർദ്ദേശങ്ങൾ പാലിക്കുക. സുരക്ഷിതമാണെങ്കിൽ സംഘത്തെ ഒരുമിച്ച് നിലനിർത്തുക."
+      },
+      "source_ids": [
+        "NEYTHAL_DESIGN_PRINCIPLE"
+      ]
+    },
+    {
+      "id": "SOS002",
+      "category": "sos_emergency",
+      "tags": [
+        "engine_failure",
+        "communication"
+      ],
+      "question": {
+        "en": "What should I do if my boat engine fails at sea?",
+        "ta": "கடலில் படகின் இயந்திரம் செயலிழந்தால் என்ன செய்ய வேண்டும்?",
+        "ml": "കടലിൽ ബോട്ടിന്റെ എഞ്ചിൻ തകരാറായാൽ എന്ത് ചെയ്യണം?"
+      },
+      "answer": {
+        "en": "Assess immediate hazards, maintain safe vessel stability, use available communication equipment to request assistance if needed, and provide your position and condition. Do not attempt risky repairs if sea conditions make them unsafe.",
+        "ta": "உடனடி அபாயங்களை மதிப்பிட்டு, படகின் நிலைத்தன்மையை பாதுகாத்து, தேவையானால் தொடர்பு சாதனத்தைப் பயன்படுத்தி உதவி கோருங்கள். உங்கள் இருப்பிடத்தையும் நிலைமையையும் தெரிவியுங்கள். கடல் நிலைமை ஆபத்தாக இருந்தால் ஆபத்தான பழுதுபார்ப்பை முயற்சிக்க வேண்டாம்.",
+        "ml": "ഉടൻ ഉണ്ടാകുന്ന അപകടങ്ങൾ വിലയിരുത്തി ബോട്ടിന്റെ സ്ഥിരത ഉറപ്പാക്കുക. ആവശ്യമെങ്കിൽ ആശയവിനിമയ ഉപകരണം ഉപയോഗിച്ച് സഹായം അഭ്യർത്ഥിക്കുകയും നിങ്ങളുടെ സ്ഥാനവും അവസ്ഥയും അറിയിക്കുകയും ചെയ്യുക. കടൽ സാഹചര്യം അപകടകരമാണെങ്കിൽ അപകടസാധ്യതയുള്ള അറ്റകുറ്റപ്പണി ശ്രമിക്കരുത്."
+      },
+      "source_ids": [
+        "NEYTHAL_DESIGN_PRINCIPLE"
+      ]
+    },
+    {
+      "id": "SOS003",
+      "category": "sos_emergency",
+      "tags": [
+        "man-overboard",
+        "life-saving"
+      ],
+      "question": {
+        "en": "What should the crew do if someone falls overboard?",
+        "ta": "ஒருவர் கடலில் விழுந்தால் குழுவினர் என்ன செய்ய வேண்டும்?",
+        "ml": "ഒരാൾ കടലിൽ വീണാൽ സംഘം എന്ത് ചെയ്യണം?"
+      },
+      "answer": {
+        "en": "Raise the alarm immediately, keep visual contact with the person if possible, use appropriate flotation or recovery equipment, and call for assistance if required. Avoid creating additional danger to the rescuers.",
+        "ta": "உடனடியாக எச்சரிக்கை விடுங்கள். முடிந்தால் அந்த நபரை கண்காணிப்பில் வைத்திருங்கள். பொருத்தமான மிதவை அல்லது மீட்பு உபகரணங்களைப் பயன்படுத்தி உதவி தேவைப்பட்டால் அழைக்கவும். மீட்பவர்களுக்கு கூடுதல் அபாயத்தை உருவாக்க வேண்டாம்.",
+        "ml": "ഉടൻ അലാറം നൽകുക. സാധ്യമെങ്കിൽ വ്യക്തിയെ കാഴ്ചയിൽ നിലനിർത്തുക. അനുയോജ്യമായ ഫ്ലോട്ടേഷൻ അല്ലെങ്കിൽ രക്ഷാപകരണങ്ങൾ ഉപയോഗിക്കുകയും ആവശ്യമെങ്കിൽ സഹായം വിളിക്കുകയും ചെയ്യുക. രക്ഷാപ്രവർത്തകർക്ക് അധിക അപകടം സൃഷ്ടിക്കരുത്."
+      },
+      "source_ids": [
+        "NEYTHAL_DESIGN_PRINCIPLE"
+      ]
+    },
+    {
+      "id": "FI001",
+      "category": "fishing_intelligence",
+      "tags": [
+        "pfz",
+        "location",
+        "latitude",
+        "longitude"
+      ],
+      "question": {
+        "en": "What information is included in an INCOIS PFZ advisory?",
+        "ta": "INCOIS PFZ ஆலோசனையில் எந்த தகவல்கள் உள்ளன?",
+        "ml": "INCOIS PFZ ഉപദേശത്തിൽ എന്തെല്ലാം വിവരങ്ങൾ ഉൾപ്പെടുന്നു?"
+      },
+      "answer": {
+        "en": "PFZ information can include the potential fishing-zone location using latitude and longitude, depth, and distance and direction from identifiable coastal reference points. Wind information is also used to help account for possible shifts.",
+        "ta": "PFZ தகவலில் சாத்தியமான மீன்பிடி மண்டலத்தின் அட்சரேகை மற்றும் தீர்க்கரேகை, ஆழம், மேலும் கரையோரத்தில் அடையாளம் காணக்கூடிய இடங்களிலிருந்து தூரம் மற்றும் திசை போன்ற தகவல்கள் இருக்கலாம். PFZ இடம் மாறக்கூடியதால் காற்றின் தகவலும் பயன்படுத்தப்படுகிறது.",
+        "ml": "PFZ വിവരങ്ങളിൽ സാധ്യതയുള്ള മത്സ്യബന്ധന മേഖലയുടെ അക്ഷാംശ-രേഖാംശം, ആഴം, തീരത്തെ തിരിച്ചറിയാവുന്ന സ്ഥലങ്ങളിൽ നിന്നുള്ള ദൂരം, ദിശ എന്നിവ ഉൾപ്പെടാം. PFZ സ്ഥാനം മാറാൻ സാധ്യതയുള്ളതിനാൽ കാറ്റിന്റെ വിവരവും ഉപയോഗിക്കുന്നു."
+      },
+      "source_ids": [
+        "INCOIS_PFZ"
+      ]
+    },
+    {
+      "id": "FI002",
+      "category": "fishing_intelligence",
+      "tags": [
+        "pfz",
+        "satellite",
+        "fishing"
+      ],
+      "question": {
+        "en": "Can a PFZ advisory guarantee that fish will be present at the exact marked point?",
+        "ta": "PFZ ஆலோசனை குறிக்கப்பட்ட இடத்திலேயே மீன்கள் இருப்பதை உறுதி செய்யுமா?",
+        "ml": "PFZ ഉപദേശം അടയാളപ്പെടുത്തിയ കൃത്യസ്ഥാനത്ത് മത്സ്യം ഉണ്ടെന്ന് ഉറപ്പുനൽകുമോ?"
+      },
+      "answer": {
+        "en": "No. A PFZ advisory identifies potential fishing zones, not a guarantee of fish catch at an exact point. Ocean conditions are dynamic, so the actual location can shift.",
+        "ta": "இல்லை. PFZ ஆலோசனை சாத்தியமான மீன்பிடி மண்டலங்களை அடையாளம் காட்டுகிறது; குறிப்பிட்ட ஒரு புள்ளியில் மீன் கிடைக்கும் என்று உத்தரவாதம் அளிக்காது. கடல் நிலைமைகள் மாறிக்கொண்டிருப்பதால் உண்மையான இடம் மாறலாம்.",
+        "ml": "ഇല്ല. PFZ ഉപദേശം സാധ്യതയുള്ള മത്സ്യബന്ധന മേഖലകളെയാണ് കാണിക്കുന്നത്; കൃത്യമായ ഒരു സ്ഥാനത്ത് മത്സ്യം ലഭിക്കുമെന്ന് ഉറപ്പുനൽകുന്നില്ല. സമുദ്ര സാഹചര്യങ്ങൾ മാറുന്നതിനാൽ യഥാർത്ഥ സ്ഥാനം മാറാം."
+      },
+      "source_ids": [
+        "INCOIS_PFZ"
+      ]
+    },
+    {
+      "id": "GEN001",
+      "category": "general_safety",
+      "tags": [
+        "live-data",
+        "offline",
+        "warning"
+      ],
+      "question": {
+        "en": "Can an offline chatbot tell me today's weather or current sea warning?",
+        "ta": "ஆஃப்லைன் chatbot இன்றைய வானிலை அல்லது தற்போதைய கடல் எச்சரிக்கையை சொல்ல முடியுமா?",
+        "ml": "ഓഫ്‌ലൈൻ chatbot-ന് ഇന്നത്തെ കാലാവസ്ഥയോ നിലവിലെ കടൽ മുന്നറിയിപ്പോ പറയാനാകുമോ?"
+      },
+      "answer": {
+        "en": "Not reliably without current data. An offline chatbot can explain safety procedures and previously stored knowledge, but current warnings and forecasts should be obtained from live official sources when connectivity is available.",
+        "ta": "தற்போதைய தரவு இல்லாமல் நம்பகமாக சொல்ல முடியாது. ஆஃப்லைன் chatbot பாதுகாப்பு நடைமுறைகள் மற்றும் முன்பே சேமிக்கப்பட்ட தகவல்களை விளக்க முடியும். ஆனால் தற்போதைய எச்சரிக்கைகள் மற்றும் முன்னறிவிப்புகள் இணைய இணைப்பு கிடைக்கும் போது அதிகாரப்பூர்வ நேரடி ஆதாரங்களிலிருந்து பெறப்பட வேண்டும்.",
+        "ml": "പുതിയ നിലവിലെ ഡാറ്റ ഇല്ലാതെ വിശ്വസനീയമായി പറയാനാകില്ല. ഓഫ്‌ലൈൻ chatbot സുരക്ഷാ നടപടികളും മുമ്പ് സംഭരിച്ച അറിവും വിശദീകരിക്കാം. എന്നാൽ നിലവിലെ മുന്നറിയിപ്പുകളും പ്രവചനങ്ങളും കണക്ഷൻ ലഭിക്കുമ്പോൾ ഔദ്യോഗിക ലൈവ് സ്രോതസുകളിൽ നിന്ന് നേടണം."
+      },
+      "source_ids": [
+        "IMD_FISHERMEN_WARNING",
+        "INCOIS_PFZ"
+      ]
+    },
+    {
+      "id": "GEN002",
+      "category": "general_safety",
+      "tags": [
+        "source",
+        "trust",
+        "official"
+      ],
+      "question": {
+        "en": "Which official sources should Neythal prioritize for Indian maritime safety information?",
+        "ta": "இந்திய கடல் பாதுகாப்பு தகவல்களுக்கு Neythal எந்த அதிகாரப்பூர்வ ஆதாரங்களுக்கு முன்னுரிமை கொடுக்க வேண்டும்?",
+        "ml": "ഇന്ത്യൻ സമുദ്ര സുരക്ഷാ വിവരങ്ങൾക്ക് Neythal ഏത് ഔദ്യോഗിക സ്രോതസ്സുകൾക്ക് മുൻഗണന നൽകണം?"
+      },
+      "answer": {
+        "en": "For weather and fishermen warnings, prioritize the India Meteorological Department (IMD). For ocean-state and fisheries advisories such as PFZ, prioritize INCOIS. Current warnings should always take precedence over older stored information.",
+        "ta": "வானிலை மற்றும் மீனவர் எச்சரிக்கைகளுக்கு இந்திய வானிலை ஆய்வு துறைக்கு (IMD) முன்னுரிமை கொடுக்க வேண்டும். கடல் நிலை மற்றும் PFZ போன்ற மீன்பிடி ஆலோசனைகளுக்கு INCOIS-க்கு முன்னுரிமை கொடுக்க வேண்டும். தற்போதைய எச்சரிக்கைகள் பழைய சேமிக்கப்பட்ட தகவல்களை விட எப்போதும் முன்னுரிமை பெற வேண்டும்.",
+        "ml": "കാലാവസ്ഥയും മത്സ്യത്തൊഴിലാളി മുന്നറിയിപ്പുകളും സംബന്ധിച്ച് ഇന്ത്യൻ കാലാവസ്ഥാ വകുപ്പിന് (IMD) മുൻഗണന നൽകണം. സമുദ്രസ്ഥിതിയും PFZ പോലുള്ള മത്സ്യബന്ധന ഉപദേശങ്ങളും സംബന്ധിച്ച് INCOIS-ന് മുൻഗണന നൽകണം. നിലവിലെ മുന്നറിയിപ്പുകൾ പഴയ സംഭരിച്ച വിവരങ്ങളെക്കാൾ എപ്പോഴും മുൻഗണന നേടണം."
+      },
+      "source_ids": [
+        "IMD_FISHERMEN_WARNING",
+        "INCOIS_PFZ"
+      ]
+    }
+  ]
+}
