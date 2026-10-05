@@ -1,0 +1,113 @@
+import type { FishingZone } from "../../services/fishing/types";
+
+const lastUpdated = "2026-10-05T18:00:00.000Z";
+
+export const demoFishingZones: FishingZone[] = [
+  {
+    id: "demo-gulf-mannar",
+    name: "GULF OF MANNAR",
+    zoneType: "FISHING",
+    geometry: {
+      type: "Polygon",
+      coordinates: [[
+        [78.45, 8.92],
+        [78.83, 8.78],
+        [79.12, 8.91],
+        [79.05, 9.22],
+        [78.72, 9.34],
+        [78.45, 8.92],
+      ]],
+    },
+    center: { latitude: 9.04, longitude: 78.79 },
+    riskLevel: "HIGH",
+    activityScore: 82,
+    vesselCount: 24,
+    species: ["Tuna", "Mackerel", "Sardine"],
+    source: "SIMULATED",
+    confidence: 0.78,
+    timestamp: lastUpdated,
+    lastUpdated,
+  },
+  {
+    id: "demo-palk-bay",
+    name: "PALK BAY",
+    zoneType: "FISHING",
+    geometry: {
+      type: "Polygon",
+      coordinates: [[
+        [79.12, 9.55],
+        [79.51, 9.50],
+        [79.68, 9.77],
+        [79.48, 10.04],
+        [79.16, 9.93],
+        [79.12, 9.55],
+      ]],
+    },
+    center: { latitude: 9.76, longitude: 79.39 },
+    riskLevel: "MODERATE",
+    activityScore: 58,
+    vesselCount: 17,
+    species: ["Mackerel", "Snapper"],
+    source: "SIMULATED",
+    confidence: 0.69,
+    timestamp: lastUpdated,
+    lastUpdated,
+  },
+  {
+    id: "demo-south-tamil-nadu",
+    name: "SOUTHERN TAMIL NADU",
+    zoneType: "FISHING",
+    geometry: {
+      type: "Polygon",
+      coordinates: [[
+        [78.02, 8.35],
+        [78.46, 8.26],
+        [78.68, 8.53],
+        [78.48, 8.82],
+        [78.08, 8.73],
+        [78.02, 8.35],
+      ]],
+    },
+    center: { latitude: 8.54, longitude: 78.34 },
+    riskLevel: "LOW",
+    activityScore: 32,
+    vesselCount: 8,
+    species: ["Sardine", "Snapper"],
+    source: "SIMULATED",
+    confidence: 0.62,
+    timestamp: lastUpdated,
+    lastUpdated,
+  },
+  {
+    id: "demo-restricted-area",
+    name: "DEMO RESTRICTED AREA",
+    zoneType: "RESTRICTED",
+    geometry: {
+      type: "Polygon",
+      coordinates: [[
+        [79.55, 9.14],
+        [79.82, 9.15],
+        [79.86, 9.39],
+        [79.61, 9.47],
+        [79.55, 9.14],
+      ]],
+    },
+    center: { latitude: 9.3, longitude: 79.7 },
+    riskLevel: "CRITICAL",
+    activityScore: 0,
+    vesselCount: 0,
+    source: "SIMULATED",
+    confidence: 0.55,
+    timestamp: lastUpdated,
+    lastUpdated,
+  },
+];
+
+export const demoMaritimeBoundary: [number, number][] = [
+  [10.0833, 80.05],
+  [9.95, 79.5833],
+  [9.6694, 79.3767],
+  [9.3639, 79.5111],
+  [9.2167, 79.5333],
+  [9.1, 79.5333],
+];

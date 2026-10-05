@@ -6,6 +6,44 @@ import * as THREE from "three";
 
 import { getSafetyResponse, type SafetyZone } from "./neythalAI";
 import NeythalChatbot from "./components/NeythalChatbot";
+import MarineFishingIntelligence from "./components/fishing/MarineFishingIntelligence";
+
+const RADAR_VIEWBOX_SIZE = 100;
+const RADAR_CENTER = RADAR_VIEWBOX_SIZE / 2;
+const RADAR_SECTOR_RADIUS = RADAR_CENTER - 2;
+const RADAR_SECTOR_HALF_ANGLE = (24 * Math.PI) / 180;
+const RESTRICTED_MARKER_POSITION = { x: 73, y: 34 };
+const HIGH_RISK_MARKER_POSITION = { x: 29, y: 67 };
+
+function createRadarSector(
+  center: { x: number; y: number },
+  radius: number,
+  startAngle: number,
+  endAngle: number
+) {
+  const startX = center.x + radius * Math.cos(startAngle);
+  const startY = center.y + radius * Math.sin(startAngle);
+  const endX = center.x + radius * Math.cos(endAngle);
+  const endY = center.y + radius * Math.sin(endAngle);
+
+  return [
+    `M ${center.x} ${center.y}`,
+    `L ${startX} ${startY}`,
+    `A ${radius} ${radius} 0 0 1 ${endX} ${endY}`,
+    "Z",
+  ].join(" ");
+}
+
+function getRadarSectorPath(marker: { x: number; y: number }) {
+  const angle = Math.atan2(marker.y - RADAR_CENTER, marker.x - RADAR_CENTER);
+
+  return createRadarSector(
+    { x: RADAR_CENTER, y: RADAR_CENTER },
+    RADAR_SECTOR_RADIUS,
+    angle - RADAR_SECTOR_HALF_ANGLE,
+    angle + RADAR_SECTOR_HALF_ANGLE
+  );
+}
 
 /* =========================================================
    OCEAN
@@ -919,7 +957,21 @@ export default function App() {
           <div className="radar-cross horizontal" />
           <div className="radar-cross vertical" />
 
-          <div className="radar-sweep" />
+          <svg
+            className="radar-sweep"
+            viewBox="0 0 100 100"
+            aria-hidden="true"
+          >
+            <path d={getRadarSectorPath(HIGH_RISK_MARKER_POSITION)} />
+          </svg>
+
+          <svg
+            className="radar-danger-sector"
+            viewBox="0 0 100 100"
+            aria-hidden="true"
+          >
+            <path d={getRadarSectorPath(RESTRICTED_MARKER_POSITION)} />
+          </svg>
 
           <div className="radar-vessel">
             <span />
@@ -996,186 +1048,8 @@ export default function App() {
       ===================================================== */}
 
       <section id="fishing" className="fishing-section">
-        {/* HEADER */}
+        <MarineFishingIntelligence />
 
-        <div className="fishing-header">
-          <div>
-            <p className="section-number">05 / FISHING INTELLIGENCE</p>
-
-            <h2>
-              FIND
-              <br />
-              THE RIGHT
-              <br />
-              WATERS.
-            </h2>
-
-            <p className="fishing-description">
-              AI-analyzed ocean biological parameters for Tamil deep-sea
-              fishermen.
-            </p>
-          </div>
-
-          <div className="regional-model">
-            <span>✧</span>
-            Regional Model: Gulf of Mannar
-          </div>
-        </div>
-
-        {/* MAIN INTELLIGENCE */}
-
-        <div className="fishing-intelligence-grid">
-          {/* SCORE */}
-
-          <div className="fishing-score-card">
-            <span className="fishing-card-title">
-              FISHING SUITABILITY SCORE
-            </span>
-
-            <div className="score-circle">
-              <div className="score-inner">
-                <strong>88</strong>
-
-                <span>/100</span>
-              </div>
-            </div>
-
-            <div className="classification">CLASSIFICATION: HIGH</div>
-
-            <div className="classification-tamil">உயர்ந்த மீன்பிடி திறன்</div>
-          </div>
-
-          {/* AI ADVISORY */}
-
-          <div className="marine-advisory">
-            <div className="advisory-title">↗ AI MARINE ADVISORY</div>
-
-            <div className="advisory-message">
-              "இந்த பகுதியில் மீன்பிடிக்க மிகவும் ஏற்ற சூழ்நிலை உள்ளது."
-            </div>
-
-            <p>
-              Optimal sea surface temperature and gentle swell creating high
-              fishing potential.
-            </p>
-
-            <div className="advisory-divider" />
-
-            <div className="advisory-info">
-              <span className="info-icon">ⓘ</span>
-
-              <p>
-                Calculated using localized sea-surface temperature, wave
-                turbulence, and coastal wind gradients. Target species:{" "}
-                <em>
-                  Sardinella longiceps, Scomberomorus commerson, and Snapper.
-                </em>
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* ENVIRONMENTAL FACTOR MATRIX */}
-
-        <div className="factor-heading">ENVIRONMENTAL FACTOR MATRIX</div>
-
-        <div className="factor-grid">
-          {/* SEA TEMPERATURE */}
-
-          <div className="factor-card">
-            <div className="factor-top">
-              <strong>Sea Surface Temp</strong>
-
-              <span>28.4°C</span>
-            </div>
-
-            <div className="factor-bar">
-              <div className="factor-fill temperature" />
-            </div>
-
-            <p>
-              Optimal sea temperature for Sardine, Mackerel & Tuna aggregation.
-            </p>
-          </div>
-
-          {/* WAVE HEIGHT */}
-
-          <div className="factor-card">
-            <div className="factor-top">
-              <strong>Wave Height</strong>
-
-              <span>1.8 m</span>
-            </div>
-
-            <div className="factor-bar">
-              <div className="factor-fill waves" />
-            </div>
-
-            <p>Moderate swell. Manageable with standard motorized trawlers.</p>
-          </div>
-
-          {/* WIND */}
-
-          <div className="factor-card">
-            <div className="factor-top">
-              <strong>Wind Speed</strong>
-
-              <span>18 km/h (NE)</span>
-            </div>
-
-            <div className="factor-bar">
-              <div className="factor-fill wind" />
-            </div>
-
-            <p>
-              Gentle wind conditions favorable for longline & gillnet fishing.
-            </p>
-          </div>
-        </div>
-
-        {/* DISCLAIMER */}
-
-        <div className="fishing-disclaimer">
-          * Prototype fishing suitability index. Real-world fishing decisions
-          should consider local fisheries department directives and ocean
-          weather advisories.
-        </div>
-
-        {/* AI FISHING ZONES */}
-
-        <div className="fishing-map">
-          <div className="map-grid" />
-
-          <div className="map-label map-title">AI FISHING ZONES</div>
-
-          <div className="map-label map-location">GULF OF MANNAR</div>
-
-          <div className="fishing-zone zone-high">
-            <span>HIGH</span>
-          </div>
-
-          <div className="fishing-zone zone-medium">
-            <span>MODERATE</span>
-          </div>
-
-          <div className="fishing-zone zone-low">
-            <span>LOW</span>
-          </div>
-
-          <div className="boat-marker">⌁</div>
-
-          <div className="route-line" />
-        </div>
-
-        {/* FOOTER */}
-
-        <div className="fishing-footer">
-          <span>● FISHING INTELLIGENCE ACTIVE</span>
-
-          <span>AI MODEL / ONLINE</span>
-
-          <span>TAMIL NADU DEEP-SEA FISHERIES</span>
-        </div>
       </section>
 
       {/* =====================================================

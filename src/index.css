@@ -1905,24 +1905,45 @@ h1 {
 .radar-sweep {
   position: absolute;
 
-  width: 50%;
-  height: 50%;
+  inset: 0;
 
-  left: 50%;
-  top: 50%;
+  width: 100%;
+  height: 100%;
 
-  transform-origin: 0 0;
-
-  background: conic-gradient(
-    from 0deg,
-    rgba(67, 217, 221, 0.35),
-    rgba(67, 217, 221, 0.12),
-    transparent 55%
-  );
-
-  clip-path: polygon(0 0, 100% 0, 75% 100%, 0 100%);
-
+  transform-box: border-box;
+  transform-origin: 50% 50%;
   animation: radarSweep 4s linear infinite;
+  pointer-events: none;
+}
+
+.radar-sweep path {
+  fill: rgba(67, 217, 221, 0.13);
+  stroke: rgba(67, 217, 221, 0.34);
+  stroke-width: 0.8;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 2px rgba(67, 217, 221, 0.2));
+}
+
+/* PROJECTED RESTRICTED ZONE */
+
+.radar-danger-sector {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  overflow: hidden;
+
+  pointer-events: none;
+}
+
+.radar-danger-sector path {
+  fill: rgba(255, 90, 70, 0.13);
+  stroke: rgba(255, 90, 70, 0.34);
+  stroke-width: 0.8;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 2px rgba(255, 90, 70, 0.2));
 }
 
 /* VESSEL */
@@ -2718,6 +2739,298 @@ h1 {
   color: rgba(233, 255, 255, 0.4);
 }
 
+.fishing-header-tools {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.fishing-language-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid rgba(67, 217, 221, 0.2);
+  border-radius: 7px;
+  background: rgba(3, 13, 20, 0.78);
+  color: rgba(233, 255, 255, 0.68);
+  font-family: "DM Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+.fishing-language-options {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.fishing-language-options button {
+  min-width: 44px;
+  min-height: 40px;
+  padding: 7px 9px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: rgba(233, 255, 255, 0.7);
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: normal;
+  cursor: pointer;
+}
+
+.fishing-language-options button.active {
+  border-color: rgba(67, 217, 221, 0.34);
+  background: rgba(67, 217, 221, 0.09);
+  color: #b9faff;
+}
+
+.fishing-language-options button:focus-visible,
+.marine-voice-button:focus-visible {
+  outline: 2px solid #43d9dd;
+  outline-offset: 2px;
+}
+
+.marine-intelligence-score {
+  grid-template-columns: minmax(0, 1fr);
+  margin-top: 30px;
+}
+
+.marine-score-meta {
+  margin-top: 12px;
+  color: rgba(233, 255, 255, 0.46);
+  font-family: "DM Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.marine-environment-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.marine-metric-card {
+  min-width: 0;
+}
+
+.marine-metric-card .factor-top {
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+.marine-metric-card .factor-top strong,
+.marine-metric-card .factor-top span {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.marine-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.marine-detail-card,
+.marine-voice,
+.marine-provenance {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid rgba(67, 217, 221, 0.14);
+  border-radius: 9px;
+  background: rgba(3, 13, 20, 0.78);
+  backdrop-filter: blur(14px);
+}
+
+.marine-detail-card h3,
+.marine-provenance h3 {
+  margin: 0 0 10px;
+  color: rgba(233, 255, 255, 0.58);
+  font-family: "DM Mono", monospace;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+}
+
+.marine-detail-card h3:not(:first-child) {
+  margin-top: 18px;
+}
+
+.marine-species {
+  margin: 0;
+  color: #e9ffff;
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.marine-score-breakdown {
+  display: grid;
+  gap: 8px;
+}
+
+.marine-score-breakdown > div,
+.marine-provenance > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  color: rgba(233, 255, 255, 0.66);
+  font-size: 11px;
+}
+
+.marine-score-breakdown > div span,
+.marine-provenance > div span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.marine-score-breakdown small {
+  color: rgba(233, 255, 255, 0.42);
+}
+
+.marine-score-breakdown strong,
+.marine-provenance strong {
+  flex-shrink: 0;
+  color: #43d9dd;
+  font-family: "DM Mono", monospace;
+  font-size: 10px;
+}
+
+.marine-methodology {
+  margin: 0;
+  color: rgba(233, 255, 255, 0.58);
+  font-size: 11px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.marine-detail-card.marine-advisory {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.marine-detail-card .advisory-message {
+  overflow-wrap: anywhere;
+}
+
+.marine-voice {
+  margin-top: 14px;
+}
+
+.marine-voice-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.marine-voice-heading p {
+  margin: 8px 0 0;
+  color: rgba(233, 255, 255, 0.54);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.marine-voice-state {
+  flex-shrink: 0;
+  padding: 6px 9px;
+  border: 1px solid rgba(67, 217, 221, 0.26);
+  border-radius: 20px;
+  color: #43d9dd;
+  font-family: "DM Mono", monospace;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+}
+
+.marine-voice-state.listening {
+  color: #ffb17e;
+  border-color: rgba(255, 157, 87, 0.4);
+}
+
+.marine-voice-state.speaking {
+  color: #75e7bd;
+  border-color: rgba(117, 231, 189, 0.4);
+}
+
+.marine-voice-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  margin-top: 14px;
+  padding: 9px 14px;
+  border: 1px solid rgba(67, 217, 221, 0.36);
+  border-radius: 6px;
+  background: rgba(67, 217, 221, 0.08);
+  color: #b9faff;
+  font-family: "DM Mono", monospace;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.marine-voice-button:disabled {
+  opacity: 0.56;
+  cursor: not-allowed;
+}
+
+.marine-voice-feedback,
+.marine-voice-answer,
+.marine-simulated-warning {
+  margin: 10px 0 0;
+  color: #ffd0aa;
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.marine-voice-answer {
+  padding-top: 10px;
+  border-top: 1px solid rgba(67, 217, 221, 0.12);
+  color: #e9ffff;
+}
+
+.marine-provenance {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.marine-provenance h3 {
+  margin-bottom: 0;
+}
+
+.marine-provenance > div {
+  flex-wrap: wrap;
+}
+
+.marine-provenance strong {
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.marine-provenance .marine-simulated-warning {
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 157, 87, 0.18);
+}
+
+.marine-intelligence-loading,
+.marine-intelligence-error {
+  margin-top: 25px;
+  padding: 20px;
+  border: 1px solid rgba(67, 217, 221, 0.14);
+  border-radius: 8px;
+  color: rgba(233, 255, 255, 0.72);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
 /* =========================================================
    AI FISHING MAP
 ========================================================= */
@@ -2737,221 +3050,457 @@ h1 {
 
   overflow: hidden;
 
-  background: radial-gradient(
-    ellipse at center,
-    rgba(8, 124, 145, 0.15),
-    rgba(2, 11, 14, 0.98)
-  );
+  isolation: isolate;
+  background: #06151b;
 }
 
-/* MAP GRID */
-
-.map-grid {
-  position: absolute;
-
-  inset: 0;
-
-  background-image:
-    linear-gradient(rgba(67, 217, 221, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(67, 217, 221, 0.06) 1px, transparent 1px);
-
-  background-size: 50px 50px;
-
-  transform: perspective(700px) rotateX(55deg) scale(1.5);
-
-  transform-origin: center center;
-
-  animation: fishingMapMove 10s linear infinite;
-}
-
-/* MAP LABELS */
-
-.map-label {
-  position: absolute;
-
-  z-index: 5;
-
+.fishing-leaflet-map,
+.fishing-leaflet-map .leaflet-container {
+  width: 100%;
+  height: 100%;
+  background: #06151b;
   font-family: "DM Mono", monospace;
-
-  letter-spacing: 0.16em;
-
-  font-size: 9px;
 }
 
-.map-title {
-  top: 24px;
-  left: 26px;
+.fishing-leaflet-map .leaflet-tile {
+  filter: saturate(0.76) brightness(0.78);
+}
 
+.fishing-leaflet-map .leaflet-control-zoom {
+  margin: 0 0 76px 14px;
+  border: 1px solid rgba(67, 217, 221, 0.25);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}
+
+.fishing-leaflet-map .leaflet-control-zoom a {
+  background: rgba(2, 14, 18, 0.92);
+  color: #b9faff;
+  border-color: rgba(67, 217, 221, 0.14);
+}
+
+.fishing-leaflet-map .leaflet-control-attribution {
+  background: rgba(2, 11, 14, 0.76);
+  color: rgba(233, 255, 255, 0.55);
+}
+
+.fishing-leaflet-map .leaflet-control-attribution a {
   color: #43d9dd;
 }
 
-.map-location {
-  right: 26px;
-  bottom: 24px;
-
-  color: rgba(233, 255, 255, 0.3);
+.fishing-vessel-marker {
+  background: transparent;
+  border: 0;
 }
 
-/* FISHING ZONES */
-
-.fishing-zone {
-  position: absolute;
-
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-
+.fishing-vessel-marker span {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border: 1px solid rgba(67, 217, 221, 0.75);
   border-radius: 50%;
-
-  border: 1px solid rgba(67, 217, 221, 0.4);
-
-  animation: fishingZonePulse 3s ease-in-out infinite;
+  background: rgba(2, 11, 14, 0.88);
+  box-shadow: 0 0 14px rgba(67, 217, 221, 0.38);
 }
 
-.fishing-zone span {
-  font-family: "DM Mono", monospace;
-
-  font-size: 8px;
-
-  letter-spacing: 0.12em;
-
-  color: #43d9dd;
+.fishing-vessel-marker svg {
+  width: 15px;
+  height: 15px;
+  fill: #43d9dd;
+  transform: rotate(var(--vessel-heading));
 }
 
-.zone-high {
-  width: 210px;
-  height: 150px;
-
-  left: 28%;
-  top: 32%;
-
-  background: radial-gradient(
-    ellipse,
-    rgba(67, 217, 221, 0.18),
-    rgba(67, 217, 221, 0.02)
-  );
-
-  transform: rotate(-12deg);
-}
-
-.zone-medium {
-  width: 170px;
-  height: 120px;
-
-  right: 16%;
-  top: 23%;
-
-  border-color: rgba(67, 217, 221, 0.25);
-
-  background: radial-gradient(ellipse, rgba(67, 217, 221, 0.1), transparent);
-
-  animation-delay: 0.8s;
-}
-
-.zone-low {
-  width: 150px;
-  height: 100px;
-
-  right: 29%;
-  bottom: 14%;
-
-  border-color: rgba(255, 120, 109, 0.3);
-
-  background: radial-gradient(ellipse, rgba(255, 120, 109, 0.08), transparent);
-
-  animation-delay: 1.5s;
-}
-
-.zone-low span {
-  color: #ff786d;
-}
-
-/* BOAT MARKER */
-
-.boat-marker {
+.fishing-map-hud {
   position: absolute;
+  z-index: 500;
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  pointer-events: none;
+}
 
-  left: 50%;
-  top: 56%;
-
-  z-index: 10;
-
-  width: 38px;
-  height: 38px;
-
-  transform: translate(-50%, -50%);
-
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-
-  border: 1px solid #43d9dd;
-
-  border-radius: 50%;
-
+.fishing-map-heading {
+  width: fit-content;
+  padding: 12px 15px;
+  border: 1px solid rgba(67, 217, 221, 0.2);
+  border-radius: 7px;
   background: rgba(2, 11, 14, 0.85);
+  backdrop-filter: blur(10px);
+}
 
+.fishing-map-heading > span,
+.fishing-map-heading small {
+  display: block;
+  color: rgba(233, 255, 255, 0.55);
+  font-family: "DM Mono", monospace;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+}
+
+.fishing-map-heading h3 {
+  margin: 5px 0;
   color: #43d9dd;
-
-  box-shadow: 0 0 20px rgba(67, 217, 221, 0.45);
-
-  animation: boatPulse 2s infinite;
+  font-family: "DM Mono", monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
 }
 
-/* ROUTE */
-
-.route-line {
+.fishing-source-badge {
   position: absolute;
-
-  left: 50%;
-  top: 56%;
-
-  width: 230px;
-  height: 2px;
-
-  transform: rotate(-25deg);
-
-  transform-origin: left center;
-
-  background: linear-gradient(90deg, #43d9dd, rgba(67, 217, 221, 0));
-
-  filter: drop-shadow(0 0 8px rgba(67, 217, 221, 0.7));
+  top: 0;
+  right: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 12px;
+  border: 1px solid rgba(255, 157, 87, 0.38);
+  border-radius: 6px;
+  background: rgba(2, 11, 14, 0.92);
+  color: #ffb17e;
+  font-family: "DM Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.14em;
 }
 
-/* MAP ANIMATIONS */
-
-@keyframes fishingMapMove {
-  from {
-    background-position: 0 0;
-  }
-
-  to {
-    background-position: 50px 50px;
-  }
+.fishing-source-badge span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
 }
 
-@keyframes fishingZonePulse {
-  0%,
-  100% {
-    opacity: 0.55;
-  }
-
-  50% {
-    opacity: 1;
-  }
+.fishing-source-badge.live {
+  color: #43d9dd;
+  border-color: rgba(67, 217, 221, 0.38);
 }
 
-@keyframes boatPulse {
-  0%,
-  100% {
-    box-shadow: 0 0 15px rgba(67, 217, 221, 0.3);
-  }
+.fishing-source-badge.cached {
+  color: #f5d76e;
+  border-color: rgba(245, 215, 110, 0.38);
+}
 
-  50% {
-    box-shadow: 0 0 35px rgba(67, 217, 221, 0.7);
-  }
+.fishing-source-badge.loading {
+  color: rgba(233, 255, 255, 0.7);
+  border-color: rgba(233, 255, 255, 0.2);
+}
+
+.fishing-map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  max-width: 440px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(67, 217, 221, 0.14);
+  border-radius: 6px;
+  background: rgba(2, 11, 14, 0.82);
+  backdrop-filter: blur(10px);
+}
+
+.fishing-map-layer-control {
+  width: fit-content;
+  pointer-events: auto;
+}
+
+.fishing-map-layer-control > summary {
+  display: none;
+}
+
+.fishing-map-layer-control:not([open]) > .fishing-map-layer-content {
+  display: block;
+}
+
+.fishing-map-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: rgba(233, 255, 255, 0.7);
+  font-family: "DM Mono", monospace;
+  font-size: 7px;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.fishing-map-legend > strong {
+  flex-basis: 100%;
+  color: rgba(233, 255, 255, 0.86);
+  font-family: "DM Mono", monospace;
+  font-size: 7px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+}
+
+.fishing-map-legend i {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.fishing-map-legend i.low { background: #39dce5; }
+.fishing-map-legend i.moderate { background: #f5d76e; }
+.fishing-map-legend i.high { background: #ff9d57; }
+.fishing-map-legend i.critical,
+.fishing-map-legend i.restricted { background: #ff465c; }
+.fishing-map-legend i.boundary {
+  width: 12px;
+  height: 1px;
+  border-radius: 0;
+  background: #43d9dd;
+}
+
+.fishing-layer-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 10px;
+  width: fit-content;
+  max-width: min(440px, calc(100vw - 48px));
+  margin-top: 7px;
+  padding: 8px 10px;
+  border: 1px solid rgba(67, 217, 221, 0.14);
+  border-radius: 6px;
+  background: rgba(2, 11, 14, 0.86);
+  backdrop-filter: blur(10px);
+  pointer-events: auto;
+}
+
+.fishing-layer-toggles label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: rgba(233, 255, 255, 0.72);
+  font-family: "DM Mono", monospace;
+  font-size: 7px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.fishing-layer-toggles input {
+  width: 11px;
+  height: 11px;
+  margin: 0;
+  accent-color: #43d9dd;
+}
+
+.fishing-map-source-note {
+  width: fit-content;
+  margin: 6px 0 0;
+  padding: 5px 8px;
+  border: 1px solid rgba(255, 157, 87, 0.25);
+  border-radius: 4px;
+  background: rgba(2, 11, 14, 0.82);
+  color: #ffd0aa;
+  font-family: "DM Mono", monospace;
+  font-size: 7px;
+  letter-spacing: 0.04em;
+}
+
+.fishing-time-control {
+  width: min(280px, calc(100vw - 48px));
+  margin-top: 7px;
+  padding: 8px 10px;
+  border: 1px solid rgba(67, 217, 221, 0.16);
+  border-radius: 6px;
+  background: rgba(2, 11, 14, 0.86);
+  backdrop-filter: blur(10px);
+  pointer-events: auto;
+}
+
+.fishing-time-control > div:first-child,
+.fishing-time-labels {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: rgba(233, 255, 255, 0.55);
+  font-family: "DM Mono", monospace;
+  font-size: 7px;
+  letter-spacing: 0.1em;
+}
+
+.fishing-time-control > div:first-child strong {
+  color: #43d9dd;
+  font-size: 8px;
+  font-weight: 500;
+}
+
+.fishing-time-control input[type="range"] {
+  display: block;
+  width: 100%;
+  height: 14px;
+  margin: 5px 0 2px;
+  accent-color: #43d9dd;
+  cursor: pointer;
+}
+
+.fishing-time-labels {
+  font-size: 6px;
+}
+
+.fishing-data-notice {
+  position: absolute;
+  z-index: 510;
+  top: 116px;
+  left: 14px;
+  max-width: min(420px, calc(100% - 28px));
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 157, 87, 0.3);
+  border-radius: 5px;
+  background: rgba(2, 11, 14, 0.9);
+  color: #ffd0aa;
+  font-family: "DM Mono", monospace;
+  font-size: 8px;
+  line-height: 1.5;
+  pointer-events: none;
+}
+
+.fishing-data-notice.error {
+  color: #ff9a92;
+  border-color: rgba(255, 70, 92, 0.35);
+}
+
+.fishing-data-panel {
+  position: absolute;
+  z-index: 520;
+  top: 58px;
+  right: 14px;
+  width: min(290px, calc(100% - 28px));
+  max-height: calc(100% - 72px);
+  overflow: auto;
+  padding: 15px;
+  border: 1px solid rgba(67, 217, 221, 0.22);
+  border-radius: 9px;
+  background: rgba(2, 11, 14, 0.92);
+  box-shadow: 0 14px 45px rgba(0, 0, 0, 0.38);
+  backdrop-filter: blur(14px);
+}
+
+.fishing-data-panel-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.fishing-data-panel-heading span,
+.fishing-data-panel dl dt {
+  color: rgba(233, 255, 255, 0.45);
+  font-family: "DM Mono", monospace;
+  font-size: 7px;
+  letter-spacing: 0.12em;
+}
+
+.fishing-data-panel-heading h3 {
+  margin: 5px 0 0;
+  color: #e9ffff;
+  font-family: "DM Mono", monospace;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+
+.fishing-data-panel-heading button {
+  align-self: flex-start;
+  border: 0;
+  background: transparent;
+  color: rgba(233, 255, 255, 0.65);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.fishing-data-panel-score {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  margin: 13px 0 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(67, 217, 221, 0.14);
+}
+
+.fishing-data-panel-score strong {
+  color: #43d9dd;
+  font-size: 25px;
+  font-weight: 500;
+}
+
+.fishing-data-panel-score span {
+  color: rgba(233, 255, 255, 0.55);
+  font-family: "DM Mono", monospace;
+  font-size: 7px;
+  letter-spacing: 0.1em;
+}
+
+.fishing-data-panel dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px 12px;
+  margin: 0;
+}
+
+.fishing-data-panel dl div {
+  min-width: 0;
+}
+
+.fishing-data-panel dl dd {
+  margin: 3px 0 0;
+  color: #e9ffff;
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+
+.fishing-data-panel .fishing-confidence-row {
+  grid-column: 1 / -1;
+}
+
+.fishing-confidence-row dd {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.fishing-confidence-track {
+  display: inline-block;
+  width: 72px;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 5px;
+  background: rgba(67, 217, 221, 0.16);
+}
+
+.fishing-confidence-track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #43d9dd;
+  box-shadow: 0 0 7px rgba(67, 217, 221, 0.45);
+}
+
+.fishing-model-note {
+  margin: 12px 0 0;
+  padding-top: 9px;
+  border-top: 1px solid rgba(67, 217, 221, 0.12);
+  color: rgba(233, 255, 255, 0.48);
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.fishing-map .leaflet-popup-content-wrapper,
+.fishing-map .leaflet-popup-tip {
+  background: #06151b;
+  color: #e9ffff;
+}
+
+.fishing-map .leaflet-popup-content {
+  font-family: "DM Mono", monospace;
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+.fishing-map .leaflet-popup-content strong {
+  color: #43d9dd;
 }
 
 /* FOOTER */
@@ -2987,6 +3536,19 @@ h1 {
     flex-direction: column;
   }
 
+  .fishing-header-tools {
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  .marine-environment-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .marine-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .fishing-intelligence-grid {
     grid-template-columns: 1fr;
   }
@@ -3007,7 +3569,52 @@ h1 {
 
 @media (max-width: 500px) {
   .fishing-header h2 {
-    font-size: 58px;
+    font-size: clamp(38px, 13vw, 58px);
+    overflow-wrap: anywhere;
+  }
+
+  .fishing-language-selector {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    font-size: 8px;
+  }
+
+  .fishing-language-options {
+    justify-content: space-between;
+    gap: 1px;
+  }
+
+  .fishing-language-options button {
+    min-width: 38px;
+    min-height: 44px;
+    padding: 6px;
+    font-size: 12px;
+  }
+
+  .marine-environment-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .marine-detail-card,
+  .marine-voice,
+  .marine-provenance {
+    padding: 14px;
+  }
+
+  .marine-voice-heading {
+    flex-direction: column;
+  }
+
+  .marine-voice-state {
+    align-self: flex-start;
+  }
+
+  .marine-voice-button {
+    width: 100%;
+    min-height: 48px;
+    font-size: 12px;
   }
 
   .advisory-message {
@@ -3016,6 +3623,181 @@ h1 {
 
   .fishing-map {
     height: 300px;
+  }
+
+  .fishing-map-hud {
+    top: 8px;
+    left: 8px;
+    right: 8px;
+  }
+
+  .fishing-map-heading {
+    padding: 8px 9px;
+  }
+
+  .fishing-map-heading {
+    max-width: calc(100% - 100px);
+  }
+
+  .fishing-map-heading h3 {
+    font-size: 9px;
+  }
+
+  .fishing-map-heading small {
+    display: none;
+  }
+
+  .fishing-source-badge {
+    top: 0;
+    left: auto;
+    right: 0;
+    padding: 6px 8px;
+    font-size: 8px;
+  }
+
+  .regional-model {
+    max-width: 100%;
+    white-space: normal;
+    line-height: 1.5;
+  }
+
+  .fishing-source-badge.loading {
+    left: auto;
+    right: 0;
+  }
+
+  .fishing-map-legend {
+    max-width: 260px;
+    gap: 5px;
+    padding: 6px;
+  }
+
+  .fishing-map-legend span {
+    font-size: 6px;
+  }
+
+  .fishing-map-layer-control {
+    position: relative;
+    width: fit-content;
+    margin-top: 6px;
+  }
+
+  .fishing-map-layer-control > summary {
+    display: block;
+    padding: 7px 9px;
+    border: 1px solid rgba(67, 217, 221, 0.2);
+    border-radius: 5px;
+    background: rgba(2, 11, 14, 0.9);
+    color: #b9faff;
+    font-family: "DM Mono", monospace;
+    font-size: 7px;
+    letter-spacing: 0.1em;
+    list-style: none;
+    cursor: pointer;
+  }
+
+  .fishing-map-layer-control > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .fishing-map-layer-control:not([open]) > .fishing-map-layer-content {
+    display: none;
+  }
+
+  .fishing-map-layer-control[open] > .fishing-map-layer-content {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    z-index: 2;
+    width: min(290px, calc(100vw - 32px));
+    padding: 5px;
+    border: 1px solid rgba(67, 217, 221, 0.2);
+    border-radius: 6px;
+    background: rgba(2, 11, 14, 0.96);
+  }
+
+  .fishing-map-layer-control[open] .fishing-map-legend,
+  .fishing-map-layer-control[open] .fishing-layer-toggles {
+    max-width: none;
+    margin: 0;
+    border: 0;
+    background: transparent;
+    backdrop-filter: none;
+  }
+
+  .fishing-map-layer-control[open] .fishing-map-legend {
+    padding: 5px;
+  }
+
+  .fishing-map-layer-control[open] .fishing-layer-toggles {
+    padding: 5px;
+  }
+
+  .fishing-map-layer-control[open] .fishing-map-legend span,
+  .fishing-map-layer-control[open] .fishing-layer-toggles label {
+    font-size: 6px;
+  }
+
+  .fishing-layer-toggles {
+    gap: 6px 8px;
+    max-width: calc(100vw - 32px);
+    padding: 6px 7px;
+  }
+
+  .fishing-layer-toggles label {
+    font-size: 6px;
+  }
+
+  .fishing-time-control {
+    width: min(240px, calc(100vw - 32px));
+    padding: 6px 8px;
+  }
+
+  .fishing-map-source-note {
+    max-width: calc(100vw - 32px);
+    font-size: 6px;
+    display: none;
+  }
+
+  .fishing-data-notice {
+    top: 118px;
+    left: 8px;
+    max-width: calc(100% - 16px);
+    font-size: 7px;
+  }
+
+  .fishing-data-panel {
+    top: auto;
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    width: auto;
+    max-height: 40%;
+    padding: 10px;
+  }
+
+  .fishing-data-panel dl {
+    gap: 6px 10px;
+  }
+
+  .fishing-data-panel-score {
+    margin: 8px 0;
+    padding-bottom: 7px;
+  }
+
+  .fishing-data-panel-score strong {
+    font-size: 20px;
+  }
+
+  .fishing-model-note {
+    margin-top: 8px;
+    padding-top: 6px;
+    font-size: 8px;
+  }
+
+  .fishing-leaflet-map .leaflet-control-zoom {
+    margin-bottom: 200px;
+    margin-left: 8px;
   }
 }
 /* =====================================================
