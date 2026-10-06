@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Data pipeline: raw downloads are large and reproducible (scripts/data)
+data/raw/
+*.part
+__pycache__/
+data/processed/windows/
