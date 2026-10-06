@@ -1,10 +1,14 @@
 import MaritimeMap from "./MaritimeMap";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Stars } from "@react-three/drei";
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
-import { getSafetyResponse, type SafetyZone } from "./neythalAI";
+import {
+  SAFETY_ALERT_CONTENT,
+  type SafetyAlertLanguage,
+  type SafetyZone,
+} from "./neythalAI";
 import NeythalChatbot from "./components/NeythalChatbot";
 import MarineFishingIntelligence from "./components/fishing/MarineFishingIntelligence";
 
@@ -14,6 +18,23 @@ const RADAR_SECTOR_RADIUS = RADAR_CENTER - 2;
 const RADAR_SECTOR_HALF_ANGLE = (24 * Math.PI) / 180;
 const RESTRICTED_MARKER_POSITION = { x: 73, y: 34 };
 const HIGH_RISK_MARKER_POSITION = { x: 29, y: 67 };
+
+const SAFETY_ZONE_PRIORITY: Record<SafetyZone, number> = {
+  SAFE: 0,
+  CAUTION: 1,
+  WARNING: 2,
+  CRITICAL: 3,
+};
+
+const SPEECH_LOCALE: Record<SafetyAlertLanguage, string> = {
+  en: "en-IN",
+  ta: "ta-IN",
+  ml: "ml-IN",
+};
+
+type PendingSafetyAlert = {
+  zone: SafetyZone;
+};
 
 function createRadarSector(
   center: { x: number; y: number },
@@ -476,11 +497,13 @@ function Scene() {
 
 function GlobalHeader({
   safetyZone,
+  alertLanguage,
   isConnected,
   setIsConnected,
   setChatOpen,
 }: {
   safetyZone: SafetyZone;
+  alertLanguage: SafetyAlertLanguage;
   isConnected: boolean;
   setIsConnected: (value: boolean) => void;
   setChatOpen: (value: boolean) => void;
@@ -506,17 +529,11 @@ function GlobalHeader({
     }
   };
 
+  const zoneLabel = SAFETY_ALERT_CONTENT[alertLanguage][safetyZone].label;
   const getRiskLabel = () => {
-    switch (safetyZone) {
-      case "CAUTION":
-        return "RISK: CAUTION";
-      case "WARNING":
-        return "RISK: WARNING";
-      case "CRITICAL":
-        return "RISK: CRITICAL";
-      default:
-        return "RISK: SAFE";
-    }
+    if (alertLanguage === "ta") return `ஆபத்து நிலை: ${zoneLabel}`;
+    if (alertLanguage === "ml") return `അപകടനില: ${zoneLabel}`;
+    return `RISK: ${zoneLabel}`;
   };
 
   return (
@@ -662,39 +679,111 @@ function GlobalHeader({
 export default function App() {
   const [showSOS, setShowSOS] = useState(false);
   const [safetyZone, setSafetyZone] = useState<SafetyZone>("SAFE");
+  const [alertLanguage, setAlertLanguage] =
+    useState<SafetyAlertLanguage>("en");
+  const [voiceStatus, setVoiceStatus] = useState<string | null>(null);
 
   const [chatOpen, setChatOpen] = useState(false);
 
   const [isConnected, setIsConnected] = useState(true);
 
-  const speakNeythal = (text: string) => {
-    if (!("speechSynthesis" in window)) {
+  const speechQueueRef = useRef<PendingSafetyAlert[]>([]);
+  const activeSpeechRef = useRef<{
+    zone: SafetyZone;
+    generation: number;
+  } | null>(null);
+  const speechGenerationRef = useRef(0);
+  const speakNextSafetyAlertRef = useRef<() => void>(() => {});
+
+  const speakNextSafetyAlert = useCallback(() => {
+    if (
+      typeof window === "undefined" ||
+      !("speechSynthesis" in window) ||
+      activeSpeechRef.current
+    ) {
       return;
     }
 
-    window.speechSynthesis.cancel();
+    const nextAlert = speechQueueRef.current.shift();
+    if (!nextAlert) return;
 
-    const speech = new SpeechSynthesisUtterance(text);
+    const speech = new SpeechSynthesisUtterance(
+      SAFETY_ALERT_CONTENT[alertLanguage][nextAlert.zone].message
+    );
+    const locale = SPEECH_LOCALE[alertLanguage];
+    const voices = window.speechSynthesis.getVoices();
+    const voice =
+      voices.find((availableVoice) => availableVoice.lang.toLowerCase() === locale.toLowerCase()) ??
+      voices.find((availableVoice) =>
+        availableVoice.lang.toLowerCase().startsWith(`${alertLanguage}-`)
+      );
 
-    speech.lang = "ta-IN";
+    speech.lang = locale;
     speech.rate = 0.92;
     speech.pitch = 1;
+    if (voice) speech.voice = voice;
+
+    const generation = ++speechGenerationRef.current;
+    activeSpeechRef.current = { zone: nextAlert.zone, generation };
+
+    speech.onend = () => {
+      if (speechGenerationRef.current !== generation) return;
+      activeSpeechRef.current = null;
+      setVoiceStatus(null);
+      speakNextSafetyAlertRef.current();
+    };
+    speech.onerror = (event) => {
+      if (speechGenerationRef.current !== generation) return;
+      activeSpeechRef.current = null;
+      setVoiceStatus(`Voice alert failed: ${event.error}.`);
+      speakNextSafetyAlertRef.current();
+    };
 
     window.speechSynthesis.speak(speech);
-  };
+  }, [alertLanguage]);
 
-  const handleSafetyChange = (zone: SafetyZone) => {
+  useEffect(() => {
+    speakNextSafetyAlertRef.current = speakNextSafetyAlert;
+  }, [speakNextSafetyAlert]);
+
+  const handleSafetyChange = useCallback((zone: SafetyZone) => {
     setSafetyZone(zone);
 
-    const response = getSafetyResponse(zone);
-
-    /*
-      Speak Tamil warning
-    */
-    if (zone !== "SAFE") {
-      speakNeythal(response.tamil);
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+      setVoiceStatus("Voice alerts are not supported in this browser.");
+      return;
     }
-  };
+
+    const alert = { zone };
+    const activeAlert = activeSpeechRef.current;
+
+    if (
+      activeAlert &&
+      SAFETY_ZONE_PRIORITY[zone] > SAFETY_ZONE_PRIORITY[activeAlert.zone]
+    ) {
+      speechQueueRef.current = speechQueueRef.current.filter(
+        (queuedAlert) =>
+          SAFETY_ZONE_PRIORITY[queuedAlert.zone] >= SAFETY_ZONE_PRIORITY[zone]
+      );
+      speechGenerationRef.current++;
+      window.speechSynthesis.cancel();
+      activeSpeechRef.current = null;
+      speechQueueRef.current.unshift(alert);
+    } else {
+      speechQueueRef.current.push(alert);
+    }
+
+    speakNextSafetyAlert();
+  }, [speakNextSafetyAlert]);
+
+  useEffect(
+    () => () => {
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+    },
+    []
+  );
 
   return (
     <main className="neythal-site">
@@ -704,6 +793,7 @@ export default function App() {
 
       <GlobalHeader
         safetyZone={safetyZone}
+        alertLanguage={alertLanguage}
         isConnected={isConnected}
         setIsConnected={setIsConnected}
         setChatOpen={setChatOpen}
@@ -1057,7 +1147,12 @@ export default function App() {
       ===================================================== */}
 
       <section id="live-map" className="maritime-map-section">
-        <MaritimeMap onSafetyChange={handleSafetyChange} />
+        <MaritimeMap
+          onSafetyChange={handleSafetyChange}
+          alertLanguage={alertLanguage}
+          onAlertLanguageChange={setAlertLanguage}
+          voiceStatus={voiceStatus}
+        />
       </section>
 
       <NeythalChatbot

@@ -10,14 +10,23 @@ import {
 } from "react-leaflet";
 
 import L from "leaflet";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import type { SafetyZone } from "./neythalAI";
+// Natural Earth 1:10m admin boundaries (public domain), not navigation-grade charts.
+import landMask from "./data/palk-strait-land.json";
+import {
+  SAFETY_ALERT_CONTENT,
+  type SafetyAlertLanguage,
+  type SafetyZone,
+} from "./neythalAI";
 
 import "leaflet/dist/leaflet.css";
 
 type Props = {
   onSafetyChange?: (zone: SafetyZone) => void;
+  alertLanguage: SafetyAlertLanguage;
+  onAlertLanguageChange: (language: SafetyAlertLanguage) => void;
+  voiceStatus: string | null;
 };
 
 /* =========================================================
@@ -54,13 +63,63 @@ const indianNavigationZone: [number, number][] = [
   [8.95, 78.85],
 ];
 
+const OCEAN_REGION_BOUNDS = {
+  south: 8.1,
+  north: 10.3,
+  west: 77.6,
+  east: 80.2,
+};
+
+const BOAT_ROUTE: [number, number][] = [
+  [9.78, 79.3],
+  [9.85, 79.4],
+  [9.85, 79.6],
+  [9.7, 79.6],
+  [9.75, 79.7],
+  [9.7, 79.4],
+  [9.7, 79.3],
+  [9.7, 79.3],
+  [9.6, 79.5],
+  [9.4, 79.45],
+  [9.36, 79.5],
+  [9.4, 79.45],
+  [9.6, 79.5],
+  [9.7, 79.3],
+  [9.78, 79.3],
+];
+
+type LandGeometry =
+  | { type: "Polygon"; coordinates: number[][][] }
+  | { type: "MultiPolygon"; coordinates: number[][][][] };
+
+const LAND_GEOMETRIES = landMask.features.map(
+  (feature) => feature.geometry as LandGeometry
+);
+
+const BOAT_FOOTPRINT_OFFSETS: [number, number][] = [
+  [-50, -50],
+  [0, -50],
+  [50, -50],
+  [-50, 0],
+  [50, 0],
+  [-50, 50],
+  [0, 50],
+  [50, 50],
+];
+
+const CURRENT_ZONE_LABEL: Record<SafetyAlertLanguage, string> = {
+  en: "CURRENT ZONE",
+  ta: "தற்போதைய மண்டலம்",
+  ml: "നിലവിലെ മേഖല",
+};
+
 /* =========================================================
    INITIAL BOAT POSITION
 ========================================================= */
 
 const initialBoatPosition: [number, number] = [
   9.78,
-  79.18,
+  79.3,
 ];
 
 /* =========================================================
@@ -106,16 +165,59 @@ const boatIcon = L.divIcon({
   iconAnchor: [50, 50],
 });
 
+function ZoneIcon({ zone }: { zone: SafetyZone }) {
+  if (zone === "SAFE") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M12 2.8 19 5.6v5.7c0 4.4-2.9 8-7 9.9-4.1-1.9-7-5.5-7-9.9V5.6l7-2.8Z" />
+        <path d="m8.8 11.8 2.1 2.1 4.4-4.5" />
+      </svg>
+    );
+  }
+
+  if (zone === "CRITICAL") {
+    return (
+      <svg
+        className="critical-zone-icon"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <circle cx="12" cy="12" r="8.5" />
+        <path d="m9 9 6 6m0-6-6 6" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <circle cx="12" cy="12" r="8.5" />
+      <path
+        d={zone === "CAUTION" ? "M12 10.8v4.5m0-7.2h.01" : "M12 7.5v6m0 3h.01"}
+      />
+    </svg>
+  );
+}
+
 /* =========================================================
    MAP CAMERA
 ========================================================= */
 
-function MapCamera() {
+function MapCamera({
+  mapRef,
+}: {
+  mapRef: { current: L.Map | null };
+}) {
   const map = useMap();
 
   useEffect(() => {
+    mapRef.current = map;
     map.setView([9.55, 79.35], 9.4);
-  }, [map]);
+
+    return () => {
+      mapRef.current = null;
+    };
+  }, [map, mapRef]);
 
   return null;
 }
@@ -202,9 +304,12 @@ function getNearestBoundaryDistance(
    SAFETY CALCULATION
 ========================================================= */
 
-function calculateSafetyZone(
-  distance: number
+function getCurrentZone(
+  latitude: number,
+  longitude: number
 ): SafetyZone {
+  const distance = getNearestBoundaryDistance([latitude, longitude]);
+
   if (distance <= 2) {
     return "CRITICAL";
   }
@@ -221,43 +326,24 @@ function calculateSafetyZone(
 }
 
 /* =========================================================
-   POINT-IN-POLYGON
+   COASTLINE VALIDATION
 ========================================================= */
 
-function isInsideIndianZone(
-  point: [number, number]
-) {
+function isPointInRing(
+  point: [number, number],
+  ring: number[][]
+): boolean {
   const [lat, lng] = point;
-
   let inside = false;
 
-  for (
-    let i = 0,
-      j = indianNavigationZone.length - 1;
-    i < indianNavigationZone.length;
-    j = i++
-  ) {
-    const xi =
-      indianNavigationZone[i][1];
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i];
+    const [xj, yj] = ring[j];
 
-    const yi =
-      indianNavigationZone[i][0];
-
-    const xj =
-      indianNavigationZone[j][1];
-
-    const yj =
-      indianNavigationZone[j][0];
-
-    const intersect =
-      yi > lat !== yj > lat &&
-      lng <
-        ((xj - xi) *
-          (lat - yi)) /
-          (yj - yi) +
-          xi;
-
-    if (intersect) {
+    if (
+      (yi > lat) !== (yj > lat) &&
+      lng < ((xj - xi) * (lat - yi)) / (yj - yi) + xi
+    ) {
       inside = !inside;
     }
   }
@@ -265,44 +351,87 @@ function isInsideIndianZone(
   return inside;
 }
 
-/* =========================================================
-   KEEP BOAT INSIDE INDIAN ZONE
-========================================================= */
+function isInsideLandPolygon(
+  point: [number, number],
+  polygon: number[][][]
+): boolean {
+  return isPointInRing(point, polygon[0]);
+}
 
-function clampBoatToIndianZone(
-  target: [number, number]
-): [number, number] {
-  if (isInsideIndianZone(target)) {
-    return target;
+function isLand(point: [number, number]): boolean {
+  return LAND_GEOMETRIES.some((geometry) => {
+    if (geometry.type === "Polygon") {
+      return isInsideLandPolygon(point, geometry.coordinates);
+    }
+
+    return geometry.coordinates.some((polygon) =>
+      isInsideLandPolygon(point, polygon)
+    );
+  });
+}
+
+function isWithinOceanRegion(point: [number, number]): boolean {
+  const [latitude, longitude] = point;
+
+  return (
+    latitude >= OCEAN_REGION_BOUNDS.south &&
+    latitude <= OCEAN_REGION_BOUNDS.north &&
+    longitude >= OCEAN_REGION_BOUNDS.west &&
+    longitude <= OCEAN_REGION_BOUNDS.east
+  );
+}
+
+function isValidOceanPosition(
+  position: [number, number],
+  map: L.Map | null
+): boolean {
+  if (!isWithinOceanRegion(position) || isLand(position)) {
+    return false;
   }
 
-  let closest =
-    indianNavigationZone[0];
+  if (!map) {
+    return true;
+  }
 
-  let closestDistance =
-    Number.POSITIVE_INFINITY;
+  const pixel = map.latLngToContainerPoint(position);
 
-  for (
-    let i = 0;
-    i < indianNavigationZone.length;
-    i++
-  ) {
-    const point =
-      indianNavigationZone[i];
+  return BOAT_FOOTPRINT_OFFSETS.every(([offsetX, offsetY]) => {
+    const footprintPoint = map.containerPointToLatLng([
+      pixel.x + offsetX,
+      pixel.y + offsetY,
+    ]);
+    const geographicPoint: [number, number] = [
+      footprintPoint.lat,
+      footprintPoint.lng,
+    ];
 
-    const distance =
-      distanceKm(target, point);
+    return (
+      isWithinOceanRegion(geographicPoint) &&
+      !isLand(geographicPoint)
+    );
+  });
+}
 
-    if (
-      distance <
-      closestDistance
-    ) {
-      closestDistance = distance;
-      closest = point;
+function isClearOceanPath(
+  start: [number, number],
+  end: [number, number],
+  map: L.Map
+): boolean {
+  const steps = Math.ceil(distanceKm(start, end) / 0.5);
+
+  for (let step = 1; step < steps; step++) {
+    const fraction = step / steps;
+    const position: [number, number] = [
+      start[0] + (end[0] - start[0]) * fraction,
+      start[1] + (end[1] - start[1]) * fraction,
+    ];
+
+    if (!isValidOceanPosition(position, map)) {
+      return false;
     }
   }
 
-  return closest;
+  return isValidOceanPosition(end, map);
 }
 
 /* =========================================================
@@ -311,6 +440,9 @@ function clampBoatToIndianZone(
 
 export default function MaritimeMap({
   onSafetyChange,
+  alertLanguage,
+  onAlertLanguageChange,
+  voiceStatus,
 }: Props) {
   const [
     boatPosition,
@@ -319,11 +451,21 @@ export default function MaritimeMap({
     initialBoatPosition
   );
 
+  const mapRef = useRef<L.Map | null>(null);
+  const boatMarkerRef = useRef<L.Marker | null>(null);
+  const boatPositionRef = useRef<[number, number]>(initialBoatPosition);
+  const draggingRef = useRef(false);
+  const waypointIndexRef = useRef(0);
+  const routeDirectionRef = useRef(1);
+  const lastStateUpdateRef = useRef(0);
+  const lastTrailUpdateRef = useRef(0);
+
   const boundaryDistance =
     getNearestBoundaryDistance(boatPosition);
 
   const safetyZone =
-    calculateSafetyZone(boundaryDistance);
+    getCurrentZone(boatPosition[0], boatPosition[1]);
+  const zoneContent = SAFETY_ALERT_CONTENT[alertLanguage][safetyZone];
 
   const previousSafetyZone =
     useRef<SafetyZone>(safetyZone);
@@ -334,33 +476,6 @@ export default function MaritimeMap({
   ] = useState<
     [number, number][]
   >([initialBoatPosition]);
-
-  const movementIndex =
-    useRef(0);
-
-  /* =======================================================
-     DEMO WAYPOINTS
-  ======================================================= */
-
-  const boatWaypoints =
-    useMemo<
-      [number, number][]
-    >(
-      () => [
-        [9.78, 79.18],
-        [9.82, 79.2],
-        [9.86, 79.22],
-        [9.89, 79.24],
-        [9.91, 79.26],
-        [9.88, 79.29],
-        [9.84, 79.31],
-        [9.8, 79.3],
-        [9.76, 79.27],
-        [9.73, 79.24],
-        [9.76, 79.21],
-      ],
-      []
-    );
 
   /* =======================================================
      SAFETY CALCULATION
@@ -381,50 +496,98 @@ export default function MaritimeMap({
   ======================================================= */
 
   useEffect(() => {
-    const interval =
-      setInterval(() => {
-        movementIndex.current =
-          (movementIndex.current + 1) %
-          boatWaypoints.length;
+    let frameId = 0;
+    let previousFrameTime: number | null = null;
 
-        const target =
-          boatWaypoints[
-            movementIndex.current
+    const animate = (time: number) => {
+      const elapsedSeconds =
+        previousFrameTime === null
+          ? 0
+          : Math.min((time - previousFrameTime) / 1000, 0.1);
+      previousFrameTime = time;
+
+      if (!draggingRef.current && elapsedSeconds > 0) {
+        const storedTargetIndex = waypointIndexRef.current;
+        const targetIndex =
+          Number.isInteger(storedTargetIndex) &&
+          storedTargetIndex >= 0 &&
+          storedTargetIndex < BOAT_ROUTE.length
+            ? storedTargetIndex
+            : 0;
+
+        if (targetIndex !== storedTargetIndex) {
+          console.warn("Invalid boat route index; restarting the route.");
+          waypointIndexRef.current = targetIndex;
+          routeDirectionRef.current = 1;
+        }
+
+        const target = BOAT_ROUTE[targetIndex];
+        const current = boatPositionRef.current;
+        const remainingDistance = distanceKm(current, target);
+
+        if (remainingDistance <= 0.025) {
+          const nextIndex =
+            targetIndex + routeDirectionRef.current;
+
+          if (nextIndex < 0 || nextIndex >= BOAT_ROUTE.length) {
+            routeDirectionRef.current *= -1;
+          } else {
+            waypointIndexRef.current = nextIndex;
+          }
+        } else {
+          const stepDistance = Math.min(
+            0.0062 * elapsedSeconds,
+            remainingDistance
+          );
+          const fraction = stepDistance / remainingDistance;
+          const proposedPosition: [number, number] = [
+            current[0] + (target[0] - current[0]) * fraction,
+            current[1] + (target[1] - current[1]) * fraction,
           ];
 
-        const safeTarget =
-          clampBoatToIndianZone(
-            target
-          );
+          if (isValidOceanPosition(proposedPosition, mapRef.current)) {
+            boatPositionRef.current = proposedPosition;
+            boatMarkerRef.current?.setLatLng(proposedPosition);
 
-        setBoatPosition(
-          safeTarget
-        );
+            if (time - lastStateUpdateRef.current >= 200) {
+              lastStateUpdateRef.current = time;
+              setBoatPosition(proposedPosition);
+            }
 
-        setBoatTrail(
-          previous => {
-            const updated = [
-              ...previous,
-              safeTarget,
-            ];
+            if (time - lastTrailUpdateRef.current >= 2500) {
+              lastTrailUpdateRef.current = time;
+              setBoatTrail((previous) =>
+                [...previous, proposedPosition].slice(-48)
+              );
+            }
+          } else {
+            const reverseDirection = -routeDirectionRef.current;
+            const reverseIndex = targetIndex + reverseDirection;
 
-            return updated.slice(-12);
+            if (reverseIndex < 0 || reverseIndex >= BOAT_ROUTE.length) {
+              routeDirectionRef.current = targetIndex === 0 ? 1 : -1;
+              waypointIndexRef.current =
+                targetIndex + routeDirectionRef.current;
+            } else {
+              routeDirectionRef.current = reverseDirection;
+              waypointIndexRef.current = reverseIndex;
+            }
           }
-        );
-      }, 5000);
+        }
+      }
 
-    return () => {
-      clearInterval(interval);
+      frameId = requestAnimationFrame(animate);
     };
-  }, [boatWaypoints]);
 
-  /* =======================================================
-     DRAG BOAT
-  ======================================================= */
+    frameId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frameId);
+  }, []);
 
-  const handleBoatDrag = (
-    event: L.DragEndEvent
-  ) => {
+  const handleBoatDragStart = () => {
+    draggingRef.current = true;
+  };
+
+  const handleBoatDrag = (event: L.LeafletEvent) => {
     const marker =
       event.target as L.Marker;
 
@@ -439,24 +602,48 @@ export default function MaritimeMap({
       position.lng,
     ];
 
-    const safePosition =
-      clampBoatToIndianZone(
-        requestedPosition
-      );
+    const map = mapRef.current;
+    if (
+      isValidOceanPosition(requestedPosition, map) &&
+      (!map || isClearOceanPath(boatPositionRef.current, requestedPosition, map))
+    ) {
+      boatPositionRef.current = requestedPosition;
+      setBoatPosition(requestedPosition);
+      return;
+    }
 
-    setBoatPosition(
-      safePosition
-    );
+    marker.setLatLng(boatPositionRef.current);
+  };
 
-    setBoatTrail(
-      previous => [
-        ...previous.slice(-11),
-        safePosition,
-      ]
-    );
+  const handleBoatDragEnd = (event: L.LeafletEvent) => {
+    draggingRef.current = false;
+    handleBoatDrag(event);
 
-    marker.setLatLng(
-      safePosition
+    const map = mapRef.current;
+    if (!map) return;
+
+    let nearestRouteIndex = 0;
+    let nearestRouteDistance = Number.POSITIVE_INFINITY;
+
+    BOAT_ROUTE.forEach((waypoint, index) => {
+      const distance = distanceKm(boatPositionRef.current, waypoint);
+      if (distance < nearestRouteDistance) {
+        nearestRouteDistance = distance;
+        nearestRouteIndex = index;
+      }
+    });
+
+    for (let offset = 0; offset < BOAT_ROUTE.length; offset++) {
+      const index = (nearestRouteIndex + offset) % BOAT_ROUTE.length;
+      if (isClearOceanPath(boatPositionRef.current, BOAT_ROUTE[index], map)) {
+        waypointIndexRef.current = index;
+        routeDirectionRef.current = index === BOAT_ROUTE.length - 1 ? -1 : 1;
+        break;
+      }
+    }
+
+    setBoatTrail((previous) =>
+      [...previous, boatPositionRef.current].slice(-48)
     );
   };
 
@@ -483,11 +670,37 @@ export default function MaritimeMap({
           </p>
         </div>
 
+        <div className="palk-language-control">
+          <label htmlFor="maritime-alert-language">
+            ALERT LANGUAGE
+          </label>
+          <span className="palk-language-select">
+            <select
+              id="maritime-alert-language"
+              title="Alert Language"
+              aria-label="Alert Language"
+              value={alertLanguage}
+              onChange={(event) => {
+                const language = event.currentTarget.value;
+                if (language === "en" || language === "ta" || language === "ml") {
+                  onAlertLanguageChange(language);
+                }
+              }}
+            >
+              <option value="en">English</option>
+              <option value="ta">தமிழ்</option>
+              <option value="ml">മലയാളം</option>
+            </select>
+          </span>
+        </div>
+
         <div
           className={`palk-live-status ${safetyZone.toLowerCase()}`}
+          role="status"
+          aria-live="polite"
         >
-          <span />
-          {safetyZone}
+          <ZoneIcon zone={safetyZone} />
+          <strong className="palk-live-status-label">{zoneContent.label}</strong>
         </div>
 
       </div>
@@ -506,7 +719,7 @@ export default function MaritimeMap({
           className="palk-map"
         >
 
-          <MapCamera />
+          <MapCamera mapRef={mapRef} />
 
           {/* =================================================
               DARK MARITIME BASE MAP
@@ -726,12 +939,14 @@ export default function MaritimeMap({
           ================================================= */}
 
           <Marker
+            ref={boatMarkerRef}
             position={boatPosition}
             icon={boatIcon}
             draggable={true}
             eventHandlers={{
-              dragend:
-                handleBoatDrag,
+              dragstart: handleBoatDragStart,
+              drag: handleBoatDrag,
+              dragend: handleBoatDragEnd,
             }}
           >
 
@@ -763,7 +978,7 @@ export default function MaritimeMap({
 
               {" "}
 
-              {safetyZone}
+              {zoneContent.label}
 
             </Popup>
 
@@ -786,25 +1001,16 @@ export default function MaritimeMap({
 
         <div className="palk-zone-labels">
 
-          <div className="zone-label safe">
-            <span />
-            SAFE
-          </div>
-
-          <div className="zone-label caution">
-            <span />
-            CAUTION
-          </div>
-
-          <div className="zone-label warning">
-            <span />
-            WARNING
-          </div>
-
-          <div className="zone-label critical">
-            <span />
-            CRITICAL
-          </div>
+          {(["SAFE", "CAUTION", "WARNING", "CRITICAL"] as const).map((zone) => (
+            <div
+              className={`zone-label ${zone.toLowerCase()}`}
+              key={zone}
+              aria-current={safetyZone === zone ? "true" : undefined}
+            >
+              <ZoneIcon zone={zone} />
+              <strong>{SAFETY_ALERT_CONTENT[alertLanguage][zone].label}</strong>
+            </div>
+          ))}
 
         </div>
 
@@ -854,8 +1060,15 @@ export default function MaritimeMap({
             <strong
               className={`status-${safetyZone.toLowerCase()}`}
             >
-              ● {safetyZone}
+              <ZoneIcon zone={safetyZone} />
+              {zoneContent.label}
             </strong>
+
+            {voiceStatus && (
+              <small className="palk-voice-status" role="status">
+                {voiceStatus}
+              </small>
+            )}
 
           </div>
 
@@ -867,25 +1080,14 @@ export default function MaritimeMap({
 
         <div className="palk-legend">
 
-          <div>
-            <i className="legend-safe" />
-            SAFE
-          </div>
-
-          <div>
-            <i className="legend-caution" />
-            CAUTION
-          </div>
-
-          <div>
-            <i className="legend-warning" />
-            WARNING
-          </div>
-
-          <div>
-            <i className="legend-critical" />
-            CRITICAL
-          </div>
+          {(["SAFE", "CAUTION", "WARNING", "CRITICAL"] as const).map((zone) => (
+            <div key={zone}>
+              <span className={`zone-icon-holder ${zone.toLowerCase()}`}>
+                <ZoneIcon zone={zone} />
+              </span>
+              {SAFETY_ALERT_CONTENT[alertLanguage][zone].label}
+            </div>
+          ))}
 
           <div>
             <i className="legend-boundary" />
@@ -903,38 +1105,29 @@ export default function MaritimeMap({
       <div className="palk-safety-grid">
 
         <div
-          className={`palk-safety-card ${safetyZone.toLowerCase()}`}
+          className={`palk-safety-card telemetry-card ${safetyZone.toLowerCase()}`}
+          role="status"
+          aria-live="polite"
         >
 
-          <span>
-            CURRENT SAFETY STATUS
+          <span className="telemetry-label">
+            {CURRENT_ZONE_LABEL[alertLanguage]}
           </span>
 
-          <strong>
-            {safetyZone}
-          </strong>
+          <div className={`palk-current-zone status-${safetyZone.toLowerCase()}`}>
+            <ZoneIcon zone={safetyZone} />
+            <strong>{zoneContent.label}</strong>
+          </div>
 
-          <p>
-
-            {safetyZone === "SAFE" &&
-              "Unga vessel Indian navigation zone-kulla safe-aa irukku."}
-
-            {safetyZone === "CAUTION" &&
-              "Boundary pakkathula vandhutteenga. Careful-aa continue pannunga."}
-
-            {safetyZone === "WARNING" &&
-              "Boundary-ku close-aa irukeenga. Safe side-ku thirumbi ponga."}
-
-            {safetyZone === "CRITICAL" &&
-              "Echarikkai! Boundary-ku romba close-aa irukeenga. Udane safe side-ku thirumbunga."}
-
+          <p key={`${alertLanguage}-${safetyZone}`}>
+            {zoneContent.message}
           </p>
 
         </div>
 
-        <div className="palk-safety-card">
+        <div className="palk-safety-card telemetry-card">
 
-          <span>
+          <span className="telemetry-label">
             GPS MONITORING
           </span>
 
@@ -949,19 +1142,18 @@ export default function MaritimeMap({
 
         </div>
 
-        <div className="palk-safety-card">
+        <div className="palk-safety-card telemetry-card">
 
-          <span>
-            GEOFENCE
+          <span className="telemetry-label">
+            LAND COLLISION
           </span>
 
           <strong>
-            LOCKED
+            ACTIVE
           </strong>
 
           <p>
-            Vessel movement is restricted
-            to the Indian-side navigation zone.
+            Land boundaries are checked continuously; all safety zones remain reachable.
           </p>
 
         </div>
