@@ -1,0 +1,312 @@
+{
+ "title": "Fisheries catch summary, India and Sri Lanka",
+ "sources": {
+  "fao": "FAO Global Capture Production 2025.1.0, Major Fishing Area 57 (Indian Ocean, Eastern), CC BY 4.0",
+  "seaAroundUs": "Sea Around Us catch reconstruction by EEZ (UBC), CC BY-NC 4.0"
+ },
+ "generated": "2026-10-06",
+ "units": "tonnes live weight per year (mean over the years shown)",
+ "note": "Country/EEZ-level statistics; they indicate regionally important species and gears, not daily fishing locations.",
+ "fao": {
+  "India": {
+   "years": [
+    2019,
+    2023
+   ],
+   "meanAnnualTonnes": 1351631,
+   "topSpecies": [
+    {
+     "code": "CLU",
+     "name": "Clupeoids NEI",
+     "scientificName": "Clupeiformes (=Clupeoidei)",
+     "group": "Herrings, sardines, anchovies",
+     "meanAnnualTonnes": 174579,
+     "share": 0.1292
+    },
+    {
+     "code": "RAG",
+     "name": "Indian mackerel",
+     "scientificName": "Rastrelliger kanagurta",
+     "group": "Miscellaneous pelagic fishes",
+     "meanAnnualTonnes": 114543,
+     "share": 0.0847
+    },
+    {
+     "code": "MZZ",
+     "name": "Marine fishes NEI",
+     "scientificName": "Actinopterygii",
+     "group": "Marine fishes not identified",
+     "meanAnnualTonnes": 85871,
+     "share": 0.0635
+    },
+    {
+     "code": "GIT",
+     "name": "Giant tiger prawn",
+     "scientificName": "Penaeus monodon",
+     "group": "Shrimps, prawns",
+     "meanAnnualTonnes": 74600,
+     "share": 0.0552
+    },
+    {
+     "code": "MOL",
+     "name": "Marine molluscs NEI",
+     "scientificName": "Mollusca",
+     "group": "Miscellaneous marine molluscs",
+     "meanAnnualTonnes": 66352,
+     "share": 0.0491
+    },
+    {
+     "code": "THD",
+     "name": "Threadfin and dwarf breams NEI",
+     "scientificName": "Nemipteridae",
+     "group": "Miscellaneous coastal fishes",
+     "meanAnnualTonnes": 64586,
+     "share": 0.0478
+    },
+    {
+     "code": "PON",
+     "name": "Ponyfishes(=Slipmouths) NEI",
+     "scientificName": "Leiognathidae",
+     "group": "Miscellaneous coastal fishes",
+     "meanAnnualTonnes": 53739,
+     "share": 0.0398
+    },
+    {
+     "code": "CUT",
+     "name": "Hairtails, scabbardfishes NEI",
+     "scientificName": "Trichiuridae",
+     "group": "Miscellaneous demersal fishes",
+     "meanAnnualTonnes": 48320,
+     "share": 0.0357
+    },
+    {
+     "code": "DCP",
+     "name": "Natantian decapods NEI",
+     "scientificName": "Natantia",
+     "group": "Shrimps, prawns",
+     "meanAnnualTonnes": 39831,
+     "share": 0.0295
+    },
+    {
+     "code": "TRE",
+     "name": "Jacks, crevalles NEI",
+     "scientificName": "Caranx spp",
+     "group": "Miscellaneous pelagic fishes",
+     "meanAnnualTonnes": 38012,
+     "share": 0.0281
+    },
+    {
+     "code": "CRA",
+     "name": "Marine crabs NEI",
+     "scientificName": "Brachyura",
+     "group": "Crabs, sea-spiders",
+     "meanAnnualTonnes": 37761,
+     "share": 0.0279
+    },
+    {
+     "code": "SDX",
+     "name": "Scads NEI",
+     "scientificName": "Decapterus spp",
+     "group": "Miscellaneous pelagic fishes",
+     "meanAnnualTonnes": 37110,
+     "share": 0.0275
+    },
+    {
+     "code": "IOS",
+     "name": "Indian oil sardine",
+     "scientificName": "Sardinella longiceps",
+     "group": "Herrings, sardines, anchovies",
+     "meanAnnualTonnes": 34342,
+     "share": 0.0254
+    },
+    {
+     "code": "STO",
+     "name": "Stolephorus anchovies NEI",
+     "scientificName": "Stolephorus spp",
+     "group": "Herrings, sardines, anchovies",
+     "meanAnnualTonnes": 33724,
+     "share": 0.025
+    },
+    {
+     "code": "ANX",
+     "name": "Anchovies, etc. NEI",
+     "scientificName": "Engraulidae",
+     "group": "Herrings, sardines, anchovies",
+     "meanAnnualTonnes": 33190,
+     "share": 0.0246
+    }
+   ]
+  },
+  "Sri Lanka": {
+   "years": [
+    2019,
+    2023
+   ],
+   "meanAnnualTonnes": 308372,
+   "topSpecies": [
+    {
+     "code": "CLU",
+     "name": "Clupeoids NEI",
+     "scientificName": "Clupeiformes (=Clupeoidei)",
+     "group": "Herrings, sardines, anchovies",
+     "meanAnnualTonnes": 62365,
+     "share": 0.2022
+    },
+    {
+     "code": "SDX",
+     "name": "Scads NEI",
+     "scientificName": "Decapterus spp",
+     "group": "Miscellaneous pelagic fishes",
+     "meanAnnualTonnes": 39865,
+     "share": 0.1293
+    },
+    {
+     "code": "SKJ",
+     "name": "Skipjack tuna",
+     "scientificName": "Katsuwonus pelamis",
+     "group": "Tunas, bonitos, billfishes",
+     "meanAnnualTonnes": 34875,
+     "share": 0.1131
+    },
+    {
+     "code": "YFT",
+     "name": "Yellowfin tuna",
+     "scientificName": "Thunnus albacares",
+     "group": "Tunas, bonitos, billfishes",
+     "meanAnnualTonnes": 27750,
+     "share": 0.09
+    },
+    {
+     "code": "MAX",
+     "name": "Mackerels NEI",
+     "scientificName": "Scombridae",
+     "group": "Miscellaneous pelagic fishes",
+     "meanAnnualTonnes": 23205,
+     "share": 0.0753
+    },
+    {
+     "code": "CRU",
+     "name": "Marine crustaceans NEI",
+     "scientificName": "Crustacea",
+     "group": "Miscellaneous marine crustaceans",
+     "meanAnnualTonnes": 20160,
+     "share": 0.0654
+    },
+    {
+     "code": "DPX",
+     "name": "Demersal percomorphs NEI",
+     "scientificName": "Perciformes (Others)",
+     "group": "Miscellaneous demersal fishes",
+     "meanAnnualTonnes": 17652,
+     "share": 0.0572
+    },
+    {
+     "code": "MZZ",
+     "name": "Marine fishes NEI",
+     "scientificName": "Actinopterygii",
+     "group": "Marine fishes not identified",
+     "meanAnnualTonnes": 16958,
+     "share": 0.055
+    },
+    {
+     "code": "CGX",
+     "name": "Carangids NEI",
+     "scientificName": "Carangidae",
+     "group": "Miscellaneous pelagic fishes",
+     "meanAnnualTonnes": 13677,
+     "share": 0.0444
+    },
+    {
+     "code": "CTL",
+     "name": "Cuttlefish, bobtail squids NEI",
+     "scientificName": "Sepiidae, Sepiolidae",
+     "group": "Squids, cuttlefishes, octopuses",
+     "meanAnnualTonnes": 6930,
+     "share": 0.0225
+    },
+    {
+     "code": "SWO",
+     "name": "Swordfish",
+     "scientificName": "Xiphias gladius",
+     "group": "Tunas, bonitos, billfishes",
+     "meanAnnualTonnes": 6097,
+     "share": 0.0198
+    },
+    {
+     "code": "SKX",
+     "name": "Sharks, rays, skates, etc. NEI",
+     "scientificName": "Elasmobranchii",
+     "group": "Sharks, rays, chimaeras",
+     "meanAnnualTonnes": 5479,
+     "share": 0.0178
+    },
+    {
+     "code": "RRU",
+     "name": "Rainbow runner",
+     "scientificName": "Elagatis bipinnulata",
+     "group": "Miscellaneous pelagic fishes",
+     "meanAnnualTonnes": 4780,
+     "share": 0.0155
+    },
+    {
+     "code": "FRI",
+     "name": "Frigate tuna",
+     "scientificName": "Auxis thazard",
+     "group": "Tunas, bonitos, billfishes",
+     "meanAnnualTonnes": 4235,
+     "share": 0.0137
+    },
+    {
+     "code": "CUX",
+     "name": "Sea cucumbers NEI",
+     "scientificName": "Holothuroidea",
+     "group": "Sea-urchins and other echinoderms",
+     "meanAnnualTonnes": 3406,
+     "share": 0.011
+    }
+   ]
+  }
+ },
+ "seaAroundUs": {
+  "India (mainland)": {
+   "years": [
+    2015,
+    2019
+   ],
+   "gear": {
+    "bottom trawl": 0.4359,
+    "unknown": 0.3393,
+    "small scale": 0.2171,
+    "other": 0.0043,
+    "purse seine": 0.0024,
+    "longline": 0.001,
+    "gillnets": 0.0,
+    "pelagic trawl": 0.0
+   },
+   "reporting-status": {
+    "Reported": 0.8937,
+    "Unreported": 0.1063
+   }
+  },
+  "Sri Lanka": {
+   "years": [
+    2015,
+    2019
+   ],
+   "gear": {
+    "small scale": 0.7532,
+    "bottom trawl": 0.1907,
+    "gillnets": 0.0289,
+    "unknown": 0.0192,
+    "longline": 0.0081,
+    "purse seine": 0.0,
+    "other": 0.0,
+    "pelagic trawl": 0.0
+   },
+   "reporting-status": {
+    "Reported": 0.742,
+    "Unreported": 0.258
+   }
+  }
+ }
+}

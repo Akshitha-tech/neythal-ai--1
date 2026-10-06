@@ -138,7 +138,7 @@ vessel type 30 (fishing):
   2 NM of another vessel, with minimum range, the closest point of approach in
   the next 20 minutes (CPA) and time to it (TCPA), and the other vessel's type.
 - `fishing_motion_stats.json`: speed and turn-rate distributions by status and
-  1,500 replayable 30-minute motion snippets.
+  up to 1,500 replayable 30-minute motion snippets per behaviour group.
 - MMSI numbers are replaced by salted hashes.
 - Scripts: `fetch_ais_noaa.py`, `process_ais_noaa.py`.
 
@@ -199,6 +199,10 @@ carries the labels above. Regenerate in about a minute.
   INCOIS ERDDAP server has no PFZ dataset. Historical PFZ data has to be
   requested from INCOIS.
 - **IMD fishermen warnings** have no machine-readable archive.
+- **Shipping lanes:** no traffic separation schemes or lanes are mapped in
+  OpenStreetMap seamarks or Marine Regions for this area.
+- The region is fixed in `scripts/data/_common.py` (`REGION`). Widen it (for
+  example north to Chennai at 13° N) and rerun the scripts to cover more coast.
 - ETOPO depth (~925 m cells) misses small islands and reefs. OSM hazard
   coverage is uneven.
 - Station observations are mostly 3-hourly, and Tuticorin New Port is sparse.
