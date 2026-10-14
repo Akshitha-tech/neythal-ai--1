@@ -670,37 +670,39 @@ export default function MaritimeMap({
           </p>
         </div>
 
-        <div className="palk-language-control">
-          <label htmlFor="maritime-alert-language">
-            ALERT LANGUAGE
-          </label>
-          <span className="palk-language-select">
-            <select
-              id="maritime-alert-language"
-              title="Alert Language"
-              aria-label="Alert Language"
-              value={alertLanguage}
-              onChange={(event) => {
-                const language = event.currentTarget.value;
-                if (language === "en" || language === "ta" || language === "ml") {
-                  onAlertLanguageChange(language);
-                }
-              }}
-            >
-              <option value="en">English</option>
-              <option value="ta">தமிழ்</option>
-              <option value="ml">മലയാളം</option>
-            </select>
-          </span>
-        </div>
+        <div className="palk-map-controls">
+          <div className="palk-language-control">
+            <label htmlFor="maritime-alert-language">
+              ALERT LANGUAGE
+            </label>
+            <span className="palk-language-select">
+              <select
+                id="maritime-alert-language"
+                title="Alert Language"
+                aria-label="Alert Language"
+                value={alertLanguage}
+                onChange={(event) => {
+                  const language = event.currentTarget.value;
+                  if (language === "en" || language === "ta" || language === "ml") {
+                    onAlertLanguageChange(language);
+                  }
+                }}
+              >
+                <option value="en">English</option>
+                <option value="ta">தமிழ்</option>
+                <option value="ml">മലയാളം</option>
+              </select>
+            </span>
+          </div>
 
-        <div
-          className={`palk-live-status ${safetyZone.toLowerCase()}`}
-          role="status"
-          aria-live="polite"
-        >
-          <ZoneIcon zone={safetyZone} />
-          <strong className="palk-live-status-label">{zoneContent.label}</strong>
+          <div
+            className={`palk-live-status ${safetyZone.toLowerCase()}`}
+            role="status"
+            aria-live="polite"
+          >
+            <ZoneIcon zone={safetyZone} />
+            <strong className="palk-live-status-label">{zoneContent.label}</strong>
+          </div>
         </div>
 
       </div>

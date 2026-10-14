@@ -500,13 +500,11 @@ function GlobalHeader({
   alertLanguage,
   isConnected,
   setIsConnected,
-  setChatOpen,
 }: {
   safetyZone: SafetyZone;
   alertLanguage: SafetyAlertLanguage;
   isConnected: boolean;
   setIsConnected: (value: boolean) => void;
-  setChatOpen: (value: boolean) => void;
 }) {
   const [sosOpen, setSosOpen] = useState(false);
 
@@ -599,15 +597,6 @@ function GlobalHeader({
             <span className="connection-icon">{isConnected ? "◉" : "○"}</span>
 
             {isConnected ? "CONNECTED" : "OFFLINE"}
-          </button>
-
-          {/* NEYTHAL AI */}
-          <button
-            className="neythal-ai-header-button"
-            onClick={() => setChatOpen(true)}
-          >
-            <span className="neythal-ai-orb">N</span>
-            <span>NEYTHAL AI</span>
           </button>
 
           {/* OFFLINE SOS */}
@@ -796,7 +785,6 @@ export default function App() {
         alertLanguage={alertLanguage}
         isConnected={isConnected}
         setIsConnected={setIsConnected}
-        setChatOpen={setChatOpen}
       />
 
       {/* =====================================================
@@ -1067,23 +1055,21 @@ export default function App() {
             <span />
           </div>
 
-          <div className="radar-threat threat-a">
-            <span />
+          <div className="radar-contact threat-a">
+            <span className="radar-threat" />
+            <span className="radar-label label-threat-a">RESTRICTED</span>
           </div>
 
-          <div className="radar-threat threat-b">
-            <span />
+          <div className="radar-contact threat-b">
+            <span className="radar-threat" />
+            <span className="radar-label label-threat-b">HIGH RISK</span>
           </div>
 
-          <div className="radar-threat threat-c">
-            <span />
+          <div className="radar-contact threat-c">
+            <span className="radar-threat" />
           </div>
 
           <div className="radar-label label-vessel">VESSEL</div>
-
-          <div className="radar-label label-threat-a">RESTRICTED</div>
-
-          <div className="radar-label label-threat-b">HIGH RISK</div>
 
           <div className="radar-center">
             <span>YOU</span>
