@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   askNeythal,
+  detectChatLanguage,
   type ChatLanguage,
   type ChatTurn,
   NeythalChatbotError,
@@ -262,10 +263,18 @@ export default function NeythalChatbot({
     if (!question || loading) {
       return;
     }
+    const responseLanguage = detectChatLanguage(question, language);
     if (question.length > 1000) {
-      setError(copy.tryAgain);
+      setError(
+        responseLanguage === "ta"
+          ? "கேள்வி 1000 எழுத்துகளுக்குள் இருக்க வேண்டும்."
+          : responseLanguage === "ml"
+            ? "ചോദ്യം 1000 അക്ഷരങ്ങളിൽ കവിയരുത്."
+            : "Please keep your question under 1000 characters.",
+      );
       return;
     }
+    setLanguage(responseLanguage);
 
     const userMessage: Message = {
       id: nextId.current++,
@@ -295,7 +304,7 @@ export default function NeythalChatbot({
     try {
       const reply = await askNeythal(
         question,
-        language,
+        responseLanguage,
         recentHistory,
         safetyZone,
       );
@@ -312,9 +321,9 @@ export default function NeythalChatbot({
       setError(
         requestError instanceof NeythalChatbotError
           ? requestError.message
-          : language === "ta"
+          : responseLanguage === "ta"
             ? "பதிலைப் பெற முடியவில்லை. சிறிது நேரம் கழித்து மீண்டும் முயற்சிக்கவும்."
-            : language === "ml"
+            : responseLanguage === "ml"
               ? "മറുപടി ലഭിച്ചില്ല. കുറച്ച് കഴിഞ്ഞ് വീണ്ടും ശ്രമിക്കുക."
               : "Neythal could not complete the request. Please try again.",
       );

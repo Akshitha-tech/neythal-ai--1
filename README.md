@@ -90,13 +90,18 @@ npm ci
 npm run dev
 ```
 
-Vite's development proxy forwards `/api/llama` requests to the local server.
-The maritime knowledge file is `public/neythal_maritime_knowledge.json`; replace
-its empty array with the supplied entries. Entries can include `question`,
+Vite's development proxy forwards `/api/llama` requests to the local server
+when that service is running. The maritime knowledge file is
+`public/neythal_maritime_knowledge.json`. Entries can include `question`,
 `answer`, `category`, `tags`, and `content` fields. Localized text fields may be
 strings or objects keyed by language (`en`, `ta`, or `ml`). If the server is
-unavailable, Neythal uses the best matching local answer; if no matching answer
-is available, it shows a safety-focused error instead of inventing live data.
+unavailable, Neythal uses matching localized answers and offline rules for
+common questions; unfamiliar questions receive a localized clarification.
+Neythal detects English, Tamil, Malayalam, and common romanized Tamil/Malayalam
+per message. The language selector remains available as the preference for
+ambiguous input and voice recognition. The local model is optional, and no
+live weather, sea state, GPS position, or vessel location is claimed without a
+verified data service.
 
 The Vite proxy is development-only. A deployed website needs a same-origin
 server proxy to llama.cpp or another explicitly configured API route.
