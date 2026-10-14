@@ -998,25 +998,6 @@ export default function MaritimeMap({
        
 
         {/* =================================================
-            SAFETY ZONE LABELS
-        ================================================= */}
-
-        <div className="palk-zone-labels">
-
-          {(["SAFE", "CAUTION", "WARNING", "CRITICAL"] as const).map((zone) => (
-            <div
-              className={`zone-label ${zone.toLowerCase()}`}
-              key={zone}
-              aria-current={safetyZone === zone ? "true" : undefined}
-            >
-              <ZoneIcon zone={zone} />
-              <strong>{SAFETY_ALERT_CONTENT[alertLanguage][zone].label}</strong>
-            </div>
-          ))}
-
-        </div>
-
-        {/* =================================================
             HUD
         ================================================= */}
 

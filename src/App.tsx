@@ -10,7 +10,9 @@ import {
   type SafetyZone,
 } from "./neythalAI";
 import NeythalChatbot from "./components/NeythalChatbot";
-import MarineFishingIntelligence from "./components/fishing/MarineFishingIntelligence";
+import MarineFishingIntelligence, {
+  type MarineOceanReadings,
+} from "./components/fishing/MarineFishingIntelligence";
 
 const RADAR_VIEWBOX_SIZE = 100;
 const RADAR_CENTER = RADAR_VIEWBOX_SIZE / 2;
@@ -671,10 +673,21 @@ export default function App() {
   const [alertLanguage, setAlertLanguage] =
     useState<SafetyAlertLanguage>("en");
   const [voiceStatus, setVoiceStatus] = useState<string | null>(null);
+  const [oceanReadings, setOceanReadings] =
+    useState<MarineOceanReadings | null>(null);
 
   const [chatOpen, setChatOpen] = useState(false);
 
   const [isConnected, setIsConnected] = useState(true);
+
+  const oceanTelemetrySource =
+    oceanReadings?.source === "SIMULATED"
+      ? "SIMULATED"
+      : oceanReadings?.source === "CACHED"
+        ? "CACHED"
+        : oceanReadings
+          ? "LIVE"
+          : "—";
 
   const speechQueueRef = useRef<PendingSafetyAlert[]>([]);
   const activeSpeechRef = useRef<{
@@ -943,7 +956,7 @@ export default function App() {
             <div className="center-ring" />
 
             <div className="center-core">
-              <span>LIVE</span>
+              <span>{oceanTelemetrySource}</span>
               OCEAN
             </div>
           </div>
@@ -962,18 +975,20 @@ export default function App() {
             <span className="telemetry-label">WIND</span>
 
             <strong>
-              18.4
+              {oceanReadings?.windSpeed?.toFixed(1) ?? "—"}
               <small> KM/H</small>
             </strong>
 
-            <span className="telemetry-status">↗ SOUTHWEST</span>
+            <span className="telemetry-status">
+              ↗ {oceanReadings?.windDirection?.toUpperCase() ?? "—"}
+            </span>
           </div>
 
           <div className="telemetry-card">
             <span className="telemetry-label">WAVE HEIGHT</span>
 
             <strong>
-              1.8
+              {oceanReadings?.waveHeight?.toFixed(1) ?? "—"}
               <small> M</small>
             </strong>
 
@@ -984,7 +999,7 @@ export default function App() {
             <span className="telemetry-label">WATER TEMP</span>
 
             <strong>
-              28.6
+              {oceanReadings?.seaSurfaceTemperature?.toFixed(1) ?? "—"}
               <small> °C</small>
             </strong>
 
@@ -993,7 +1008,7 @@ export default function App() {
         </div>
 
         <div className="telemetry-footer">
-          <span>● LIVE TELEMETRY</span>
+          <span>● {oceanTelemetrySource} TELEMETRY</span>
 
           <span>BAY OF BENGAL</span>
 
@@ -1124,7 +1139,7 @@ export default function App() {
       ===================================================== */}
 
       <section id="fishing" className="fishing-section">
-        <MarineFishingIntelligence />
+        <MarineFishingIntelligence onOceanReadingsChange={setOceanReadings} />
 
       </section>
 

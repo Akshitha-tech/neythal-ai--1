@@ -41,6 +41,14 @@ function metric(value: number | undefined, unit: string, digits = 1): string {
 
 const DEFAULT_TARGET_SPECIES = ["Tuna", "Mackerel", "Sardine"];
 
+export interface MarineOceanReadings {
+  windSpeed?: number;
+  windDirection?: string;
+  waveHeight?: number;
+  seaSurfaceTemperature?: number;
+  source: FishingDataResult["source"];
+}
+
 function createRefreshRandom(seedValue: string) {
   let seed = 2166136261;
   for (let index = 0; index < seedValue.length; index++) {
@@ -182,10 +190,12 @@ function MarineIntelligencePanel({
   result,
   language,
   onLanguageChange,
+  onOceanReadingsChange,
 }: {
   result: FishingDataResult;
   language: FishingLanguage;
   onLanguageChange: (language: FishingLanguage) => void;
+  onOceanReadingsChange?: (readings: MarineOceanReadings) => void;
 }) {
   const zone = result.dataset.zones.find(
     (candidate) => candidate.zoneType === "FISHING"
@@ -202,6 +212,7 @@ function MarineIntelligencePanel({
       zone={zone}
       language={language}
       onLanguageChange={onLanguageChange}
+      onOceanReadingsChange={onOceanReadingsChange}
     />
   );
 }
@@ -211,11 +222,13 @@ function MarineIntelligenceDashboard({
   zone,
   language,
   onLanguageChange,
+  onOceanReadingsChange,
 }: {
   result: FishingDataResult;
   zone: FishingZone;
   language: FishingLanguage;
   onLanguageChange: (language: FishingLanguage) => void;
+  onOceanReadingsChange?: (readings: MarineOceanReadings) => void;
 }) {
   const copy = fishingCopy[language];
   const locale = `${language}-IN`;
@@ -288,6 +301,29 @@ function MarineIntelligenceDashboard({
     const clockTimer = window.setInterval(() => setClockNow(Date.now()), 1_000);
     return () => window.clearInterval(clockTimer);
   }, []);
+
+  useEffect(() => {
+    onOceanReadingsChange?.({
+      windSpeed: isSimulated ? simulation.windSpeed : condition?.windSpeed,
+      windDirection: isSimulated
+        ? simulation.windDirection
+        : condition?.windDirection,
+      waveHeight: isSimulated ? simulation.waveHeight : condition?.waveHeight,
+      seaSurfaceTemperature: isSimulated
+        ? simulation.seaSurfaceTemperature
+        : condition?.seaSurfaceTemperature,
+      source: isSimulated ? "SIMULATED" : result.source,
+    });
+  }, [
+    condition,
+    isSimulated,
+    onOceanReadingsChange,
+    result.source,
+    simulation.seaSurfaceTemperature,
+    simulation.waveHeight,
+    simulation.windDirection,
+    simulation.windSpeed,
+  ]);
 
   const temperature = metric(simulation.seaSurfaceTemperature, "°C");
   const waves = metric(simulation.waveHeight, "m");
@@ -607,7 +643,11 @@ function MarineIntelligenceDashboard({
   );
 }
 
-export default function MarineFishingIntelligence() {
+export default function MarineFishingIntelligence({
+  onOceanReadingsChange,
+}: {
+  onOceanReadingsChange?: (readings: MarineOceanReadings) => void;
+}) {
   const provider = useMemo(() => new HybridFishingDataProvider(), []);
   const [result, setResult] = useState<FishingDataResult | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -644,6 +684,7 @@ export default function MarineFishingIntelligence() {
           result={result}
           language={language}
           onLanguageChange={setLanguage}
+          onOceanReadingsChange={onOceanReadingsChange}
         />
       ) : (
         <section className="marine-intelligence-loading" aria-live="polite">
