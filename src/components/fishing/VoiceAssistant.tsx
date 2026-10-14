@@ -67,7 +67,7 @@ function getSpeechIntent(transcript: string): SpeechIntent {
   ) {
     return "species";
   }
-  if (/favorable|favourable|good|நல்லதா|சாதக|അനുകൂല|നല്ലതാണോ/.test(question)) {
+  if (/favorable|favourable|good|safe|sea safe|நல்லதா|சாதக|அபாயமில்லையா|അനുകൂല|സുരക്ഷിത/.test(question)) {
     return "favorable";
   }
   return "suitability";
@@ -220,11 +220,16 @@ export default function VoiceAssistant({
       <div className="marine-voice-heading">
         <div>
           <span className="advisory-title">{copy.voiceAssistant}</span>
-          <p>{copy.listeningPrompt}</p>
+          <p>{copy.voiceDescription}</p>
         </div>
         <span className={`marine-voice-state ${assistantState.toLowerCase()}`}>
           {stateLabel}
         </span>
+      </div>
+      <div className="marine-voice-suggestions" aria-label="Suggested questions">
+        {copy.suggestedQuestions.map((question) => (
+          <span key={question}>{question}</span>
+        ))}
       </div>
       <button
         className="marine-voice-button"

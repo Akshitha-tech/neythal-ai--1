@@ -1,7 +1,6 @@
 import L, { type LatLngBoundsExpression, type LatLngTuple } from "leaflet";
 import type { Feature } from "geojson";
-import { Fragment } from "react";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import {
   CircleMarker,
   GeoJSON,
@@ -16,7 +15,9 @@ import {
 import type {
   FishingActivitySnapshot,
   FishingDataResult,
+  FishingVessel,
   FishingZone,
+  GeoPosition,
 } from "../../services/fishing/types";
 import { demoMaritimeBoundary } from "../../data/fishing/fishingZones";
 import { getActivitySnapshot } from "../../utils/fishing/getActivitySnapshot";
@@ -32,6 +33,8 @@ const REGION_BOUNDS: LatLngBoundsExpression = [
   [8.1, 77.6],
   [10.3, 80.2],
 ];
+const DEMO_TRACKING_TIME_SCALE = 48;
+const MAX_VESSEL_TRAIL_POINTS = 28;
 
 type FishingLayerKey =
   | "activity"
@@ -75,6 +78,305 @@ function RegionViewportController() {
   return null;
 }
 
+function pointInRing(longitude: number, latitude: number, ring: GeoPosition[]) {
+  let inside = false;
+
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i];
+    const [xj, yj] = ring[j];
+    const intersects =
+      yi > latitude !== yj > latitude &&
+      longitude < ((xj - xi) * (latitude - yi)) / (yj - yi) + xi;
+    if (intersects) inside = !inside;
+  }
+
+  return inside;
+}
+
+function isInsideZone(latitude: number, longitude: number, zone: FishingZone) {
+  const polygons = zone.geometry.type === "Polygon"
+    ? [zone.geometry.coordinates]
+    : zone.geometry.coordinates;
+
+  return polygons.some((polygon) => {
+    const [outerRing, ...holes] = polygon;
+    return (
+      pointInRing(longitude, latitude, outerRing) &&
+      !holes.some((hole) => pointInRing(longitude, latitude, hole))
+    );
+  });
+}
+
+function isSafeTrackSegment(
+  start: LatLngTuple,
+  end: LatLngTuple,
+  operatingZone: FishingZone,
+  restrictedZones: FishingZone[]
+) {
+  for (let step = 0; step <= 12; step++) {
+    const fraction = step / 12;
+    const latitude = start[0] + (end[0] - start[0]) * fraction;
+    const longitude = start[1] + (end[1] - start[1]) * fraction;
+    if (
+      !isInsideZone(latitude, longitude, operatingZone) ||
+      restrictedZones.some((zone) => isInsideZone(latitude, longitude, zone))
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function createSeededRandom(value: string) {
+  let seed = 2166136261;
+  for (let index = 0; index < value.length; index++) {
+    seed = Math.imul(seed ^ value.charCodeAt(index), 16777619);
+  }
+
+  return () => {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    return seed / 0x100000000;
+  };
+}
+
+function chooseNearbyTarget(
+  position: LatLngTuple,
+  operatingZone: FishingZone,
+  restrictedZones: FishingZone[],
+  random: () => number
+): LatLngTuple {
+  for (let attempt = 0; attempt < 32; attempt++) {
+    const bearing = random() * Math.PI * 2;
+    const distanceKm = 0.2 + random() * 0.8;
+    const latitudeOffset = (Math.cos(bearing) * distanceKm) / 111.32;
+    const longitudeOffset =
+      (Math.sin(bearing) * distanceKm) /
+      (111.32 * Math.cos((position[0] * Math.PI) / 180));
+    const candidate: LatLngTuple = [
+      position[0] + latitudeOffset,
+      position[1] + longitudeOffset,
+    ];
+
+    if (isSafeTrackSegment(position, candidate, operatingZone, restrictedZones)) {
+      return candidate;
+    }
+  }
+
+  const center: LatLngTuple = [
+    operatingZone.center.latitude,
+    operatingZone.center.longitude,
+  ];
+  for (const fraction of [0.15, 0.3, 0.45]) {
+    const candidate: LatLngTuple = [
+      position[0] + (center[0] - position[0]) * fraction,
+      position[1] + (center[1] - position[1]) * fraction,
+    ];
+    if (isSafeTrackSegment(position, candidate, operatingZone, restrictedZones)) {
+      return candidate;
+    }
+  }
+
+  return position;
+}
+
+function seededHeadingPulse(vesselId: string) {
+  return vesselId.split("").reduce((hash, character) => hash + character.charCodeAt(0), 0) % 3 === 0;
+}
+
+function createVesselIcon(vessel: FishingVessel) {
+  const heading = vessel.heading ?? 0;
+  const pulseClass = seededHeadingPulse(vessel.id) ? " is-pulsing" : "";
+  return L.divIcon({
+    className: "fishing-vessel-marker",
+    html: `<span class="fishing-vessel-core${pulseClass}" style="--vessel-heading:${heading}deg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 19 21 12 17 5 21 12 2Z"/></svg></span>`,
+    iconSize: [26, 26],
+    iconAnchor: [13, 13],
+  });
+}
+
+function rotateHeadingToward(current: number, target: number, maximumStep: number) {
+  const difference = ((target - current + 540) % 360) - 180;
+  const step = Math.sign(difference) * Math.min(Math.abs(difference), maximumStep);
+  return (current + step + 360) % 360;
+}
+
+function headingBetween(start: LatLngTuple, end: LatLngTuple) {
+  const north = end[0] - start[0];
+  const east = (end[1] - start[1]) * Math.cos((start[0] * Math.PI) / 180);
+  return (((Math.atan2(east, north) * 180) / Math.PI) + 360) % 360;
+}
+
+function distanceMeters(start: LatLngTuple, end: LatLngTuple) {
+  const north = (end[0] - start[0]) * 111_320;
+  const east =
+    (end[1] - start[1]) *
+    111_320 *
+    Math.cos((start[0] * Math.PI) / 180);
+  return Math.hypot(north, east);
+}
+
+function TrackedVesselMarker({
+  vessel,
+  operatingZone,
+  restrictedZones,
+  simulate,
+}: {
+  vessel: FishingVessel;
+  operatingZone?: FishingZone;
+  restrictedZones: FishingZone[];
+  simulate: boolean;
+}) {
+  const map = useMap();
+  const markerRef = useRef<L.Marker | null>(null);
+  const trailRef = useRef<L.Polyline | null>(null);
+  const position = useMemo<LatLngTuple>(
+    () => [vessel.latitude, vessel.longitude],
+    [vessel.latitude, vessel.longitude]
+  );
+  const initialTrailPositions = useMemo<[LatLngTuple, LatLngTuple]>(
+    () => [position, position],
+    [position]
+  );
+  const icon = useMemo(() => createVesselIcon(vessel), [vessel]);
+  const [telemetry, setTelemetry] = useState({
+    heading: Math.round(vessel.heading ?? 0),
+    speed: vessel.speed ?? 0,
+  });
+
+  useEffect(() => {
+    const marker = markerRef.current;
+    if (!simulate || !operatingZone || !marker) return;
+
+    const random = createSeededRandom(vessel.id);
+    const track = {
+      position: [...position] as LatLngTuple,
+      target: [...position] as LatLngTuple,
+      heading: vessel.heading ?? random() * 360,
+      baseSpeed: Math.max(1.5, Math.min(vessel.speed ?? 3.2, 6)),
+      currentSpeed: vessel.speed ?? 3.2,
+      phase: random() * Math.PI * 2,
+      trail: [[...position] as LatLngTuple],
+    };
+    track.target = chooseNearbyTarget(
+      track.position,
+      operatingZone,
+      restrictedZones,
+      random
+    );
+
+    let previousFrame = performance.now();
+    let lastTrailPoint = previousFrame;
+    let lastTelemetryUpdate = previousFrame;
+    let animationFrame = 0;
+    const core = marker.getElement()?.querySelector<HTMLElement>(".fishing-vessel-core");
+    const headingIcon = core?.querySelector<SVGElement>("svg");
+
+    const animate = (now: number) => {
+      const deltaSeconds = Math.min((now - previousFrame) / 1000, 0.06);
+      previousFrame = now;
+      track.currentSpeed = Math.max(
+        1.5,
+        Math.min(
+          6,
+          track.baseSpeed *
+            (1 + 0.09 * Math.sin(now / 6_500 + track.phase) + 0.04 * Math.sin(now / 11_000 + track.phase))
+        )
+      );
+
+      const remainingMeters = distanceMeters(track.position, track.target);
+      if (remainingMeters <= 0.05) {
+        track.position = [...track.target];
+        track.target = chooseNearbyTarget(
+          track.position,
+          operatingZone,
+          restrictedZones,
+          random
+        );
+      } else {
+        const desiredHeading = headingBetween(track.position, track.target);
+        track.heading = rotateHeadingToward(
+          track.heading,
+          desiredHeading,
+          75 * deltaSeconds
+        );
+        const travelMeters =
+          (track.currentSpeed * 0.514444 * DEMO_TRACKING_TIME_SCALE) * deltaSeconds;
+        const fraction = Math.min(1, travelMeters / remainingMeters);
+        track.position = [
+          track.position[0] + (track.target[0] - track.position[0]) * fraction,
+          track.position[1] + (track.target[1] - track.position[1]) * fraction,
+        ];
+      }
+
+      marker.setLatLng(track.position);
+      if (core) {
+        const roundedPoint = map.latLngToLayerPoint(track.position);
+        const precisePoint = map
+          .project(track.position, map.getZoom())
+          .subtract(map.getPixelOrigin());
+        core.style.transform = `translate3d(${precisePoint.x - roundedPoint.x}px, ${precisePoint.y - roundedPoint.y}px, 0)`;
+        core.style.setProperty("--vessel-heading", `${track.heading}deg`);
+      }
+      if (headingIcon) headingIcon.style.transform = `rotate(${track.heading}deg)`;
+
+      if (now - lastTrailPoint >= 700) {
+        track.trail.push([...track.position]);
+        if (track.trail.length > MAX_VESSEL_TRAIL_POINTS) track.trail.shift();
+        trailRef.current?.setLatLngs(track.trail);
+        lastTrailPoint = now;
+      }
+
+      if (now - lastTelemetryUpdate >= 1_500) {
+        setTelemetry({
+          heading: Math.round(track.heading),
+          speed: Number(track.currentSpeed.toFixed(1)),
+        });
+        lastTelemetryUpdate = now;
+      }
+
+      animationFrame = requestAnimationFrame(animate);
+    };
+
+    animationFrame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [map, operatingZone, position, restrictedZones, simulate, vessel]);
+
+  return (
+    <Fragment>
+      {simulate && operatingZone && (
+        <Polyline
+          ref={trailRef}
+          positions={initialTrailPositions}
+          pathOptions={{
+            color: "#43d9dd",
+            weight: 1.5,
+            opacity: 0.42,
+            lineCap: "round",
+            lineJoin: "round",
+          }}
+          interactive={false}
+        />
+      )}
+      <Marker ref={markerRef} position={position} icon={icon}>
+        <Popup>
+          <strong>{simulate ? "SIMULATED DEMO" : vessel.source} FISHING VESSEL</strong>
+          <br />
+          {vessel.id} / {simulate ? "DEMO TRACKING" : vessel.source}
+          <br />
+          Heading {simulate ? telemetry.heading : vessel.heading ?? "—"}° · Speed {simulate ? telemetry.speed : vessel.speed ?? "—"} kn
+          <br />
+          {operatingZone ? `ZONE / ${operatingZone.name}` : "POSITION / SOURCE FEED"}
+          <br />
+          Confidence {Math.round(vessel.confidence * 100)}%
+          <br />
+          Updated {formatDate(vessel.timestamp)}
+        </Popup>
+      </Marker>
+    </Fragment>
+  );
+}
+
 function zoneColor(zone: FishingZone, score: number): string {
   if (zone.zoneType === "RESTRICTED") return "#ff465c";
   if (score >= 76) return "#ff465c";
@@ -88,15 +390,6 @@ function formatDate(value: string): string {
   return Number.isNaN(date.getTime())
     ? "Timestamp unavailable"
     : date.toLocaleString();
-}
-
-function DataSourceBadge({ source }: { source: FishingDataResult["source"] }) {
-  return (
-    <span className={`fishing-source-badge ${source.toLowerCase()}`}>
-      <span />
-      {source}
-    </span>
-  );
 }
 
 function FishingZoneLayer({
@@ -118,6 +411,17 @@ function FishingZoneLayer({
       : showActivity
         ? zoneColor(zone, score)
         : "#39dce5";
+  const activityBand = zone.zoneType === "RESTRICTED"
+    ? "critical"
+    : !showActivity
+      ? "safe"
+      : score >= 76
+      ? "critical"
+      : score >= 51
+        ? "high"
+        : score >= 26
+          ? "caution"
+          : "safe";
   const geoJsonFeature: Feature = {
     type: "Feature",
     properties: { id: zone.id, name: zone.name },
@@ -150,6 +454,7 @@ function FishingZoneLayer({
     <GeoJSON
       data={geoJsonFeature}
       style={{
+        className: `fishing-zone-path fishing-zone-path-${activityBand}`,
         color,
         weight: zone.zoneType === "RESTRICTED" ? 2 : 1.5,
         opacity: 0.85,
@@ -171,7 +476,6 @@ function FishingDataPanel({
   zone,
   result,
   intelligence,
-  currentIntelligence,
   snapshot,
   detectedVessels,
   onClose,
@@ -179,7 +483,6 @@ function FishingDataPanel({
   zone: FishingZone;
   result: FishingDataResult;
   intelligence: ReturnType<typeof calculateFishingIntelligence>;
-  currentIntelligence: ReturnType<typeof calculateFishingIntelligence>;
   snapshot?: FishingActivitySnapshot;
   detectedVessels: number;
   onClose: () => void;
@@ -203,7 +506,6 @@ function FishingDataPanel({
     <aside className="fishing-data-panel" aria-label={`${zone.name} intelligence`}>
       <div className="fishing-data-panel-heading">
         <div>
-          <span>REGIONAL INTELLIGENCE</span>
           <h3>{zone.name}</h3>
         </div>
         <button type="button" onClick={onClose} aria-label="Close zone details">
@@ -219,9 +521,8 @@ function FishingDataPanel({
         </span>
       </div>
       <dl>
-        <div><dt>CURRENT SCORE</dt><dd>{currentIntelligence.activityScore}/100</dd></div>
-        <div><dt>CURRENT ACTIVITY</dt><dd>{currentIntelligence.vesselActivity}/100</dd></div>
-        <div><dt>SELECTED ACTIVITY</dt><dd>{intelligence.vesselActivity}/100</dd></div>
+        <div><dt>CURRENT SCORE</dt><dd>{intelligence.activityScore}/100</dd></div>
+        <div><dt>CURRENT ACTIVITY</dt><dd>{intelligence.vesselActivity}/100</dd></div>
         <div><dt>HISTORICAL ACTIVITY</dt><dd>{intelligence.historicalActivity}/100</dd></div>
         <div><dt>VESSEL COUNT</dt><dd>{snapshot?.vesselCount ?? zone.vesselCount}</dd></div>
         <div><dt>VESSELS IN FEED</dt><dd>{detectedVessels}</dd></div>
@@ -270,11 +571,6 @@ function FishingDataPanel({
           <div><dt>OCEAN TIMESTAMP</dt><dd>{formatDate(condition.timestamp)}</dd></div>
         )}
       </dl>
-      <p className="fishing-model-note">
-        {result.source === "SIMULATED"
-          ? "SIMULATED — Prototype intelligence, not official or verified."
-          : `LIVE — Source: ${zone.source}. Prototype intelligence score.`}
-      </p>
     </aside>
   );
 }
@@ -289,7 +585,6 @@ export default function FishingMap({
   const [selectedZoneId, setSelectedZoneId] = useState<string | null | undefined>(
     undefined
   );
-  const [hoursBack, setHoursBack] = useState(0);
   const [enabledLayers, setEnabledLayers] = useState<Record<FishingLayerKey, boolean>>({
     activity: true,
     density: true,
@@ -298,6 +593,17 @@ export default function FishingMap({
     restricted: true,
   });
   const [openZonePopup, setOpenZonePopup] = useState<L.Popup | null>(null);
+  const zones = useMemo(() => result?.dataset.zones ?? [], [result?.dataset.zones]);
+  const restrictedZones = useMemo(
+    () => zones.filter((zone) => zone.zoneType === "RESTRICTED"),
+    [zones]
+  );
+  const simulatedTracking = Boolean(
+    result && (
+      result.source === "SIMULATED" ||
+      result.dataset.metadata.providerName === "Deterministic demo dataset"
+    )
+  );
 
   const selectedZone = result?.dataset.zones.find(
     (zone) => zone.id === selectedZoneId
@@ -305,14 +611,6 @@ export default function FishingMap({
     ? result?.dataset.zones.find((zone) => zone.zoneType === "FISHING")
     : undefined);
   const selectedSnapshot = selectedZone && result
-    ? getActivitySnapshot(
-        selectedZone.id,
-        result.dataset.activityHistory,
-        hoursBack,
-        result.dataset.metadata.timestamp
-      )
-    : undefined;
-  const currentSnapshot = selectedZone && result
     ? getActivitySnapshot(
         selectedZone.id,
         result.dataset.activityHistory,
@@ -326,14 +624,6 @@ export default function FishingMap({
         result.dataset.vessels,
         result.dataset.oceanConditions,
         selectedSnapshot
-      )
-    : null;
-  const currentIntelligence = selectedZone && result
-    ? calculateFishingIntelligence(
-        selectedZone,
-        result.dataset.vessels,
-        result.dataset.oceanConditions,
-        currentSnapshot
       )
     : null;
   const selectedVesselCount = selectedZone && result
@@ -380,7 +670,7 @@ export default function FishingMap({
           const snapshot = getActivitySnapshot(
             zone.id,
             result.dataset.activityHistory,
-            hoursBack,
+            0,
             result.dataset.metadata.timestamp
           );
           const intelligence = calculateFishingIntelligence(
@@ -426,7 +716,7 @@ export default function FishingMap({
           const snapshot = getActivitySnapshot(
             zone.id,
             result.dataset.activityHistory,
-            hoursBack,
+            0,
             result.dataset.metadata.timestamp
           );
           return (
@@ -482,46 +772,26 @@ export default function FishingMap({
         ))}
 
         {result?.dataset.vessels.map((vessel) => {
-          const icon = L.divIcon({
-            className: "fishing-vessel-marker",
-            html: `<span style="--vessel-heading:${vessel.heading ?? 0}deg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 19 21 12 17 5 21 12 2Z"/></svg></span>`,
-            iconSize: [26, 26],
-            iconAnchor: [13, 13],
-          });
+          const operatingZone = simulatedTracking
+            ? zones.find((zone) =>
+                zone.zoneType === "FISHING" &&
+                isInsideZone(vessel.latitude, vessel.longitude, zone)
+              )
+            : undefined;
 
           return (
-            <Marker
+            <TrackedVesselMarker
               key={vessel.id}
-              position={[vessel.latitude, vessel.longitude]}
-              icon={icon}
-            >
-              <Popup>
-                <strong>{vessel.source} FISHING VESSEL</strong>
-                <br />
-                {vessel.id} / {vessel.source}
-                <br />
-                Heading {vessel.heading ?? "—"}° · Speed {vessel.speed ?? "—"} kn
-                <br />
-                Confidence {Math.round(vessel.confidence * 100)}%
-                <br />
-                Updated {formatDate(vessel.timestamp)}
-              </Popup>
-            </Marker>
+              vessel={vessel}
+              operatingZone={operatingZone}
+              restrictedZones={restrictedZones}
+              simulate={simulatedTracking}
+            />
           );
         })}
       </MapContainer>
 
       <div className="fishing-map-hud">
-        <div className="fishing-map-heading">
-          <span>GEOGRAPHIC INTELLIGENCE / {result?.source ?? "LOADING"}</span>
-          <h3>GULF OF MANNAR · PALK BAY</h3>
-          <small>Southern Tamil Nadu / Northern Sri Lanka</small>
-        </div>
-        {result ? (
-          <DataSourceBadge source={result.source} />
-        ) : (
-          <span className="fishing-source-badge loading">LOADING DATA</span>
-        )}
         <details className="fishing-map-layer-control">
           <summary>MAP LAYERS / LEGEND</summary>
           <div className="fishing-map-layer-content">
@@ -553,32 +823,6 @@ export default function FishingMap({
             </div>
           </div>
         </details>
-        <p className="fishing-map-source-note" title={result?.notice}>
-          {result?.source === "SIMULATED"
-            ? `SIMULATED · Prototype intelligence — not official or verified.${result.notice ? " Live source unavailable." : ""}`
-            : result?.source === "LIVE"
-                ? `LIVE · Source: ${result.dataset.metadata.providerName}`
-                : `CACHED · Last available normalized dataset${result?.notice ? " · Live source unavailable" : ""}`}
-        </p>
-        <div className="fishing-time-control">
-          <div>
-            <span>ACTIVITY WINDOW</span>
-            <strong>{hoursBack === 0 ? "CURRENT" : `${hoursBack} HOURS AGO`}</strong>
-          </div>
-          <input
-            aria-label="Fishing activity time window in hours"
-            type="range"
-            min="0"
-            max="24"
-            step="1"
-            value={hoursBack}
-            onChange={(event) => setHoursBack(Number(event.target.value))}
-          />
-          <div className="fishing-time-labels">
-            <span>CURRENT</span>
-            <span>24 HOURS</span>
-          </div>
-        </div>
       </div>
 
       {loadError && (
@@ -592,7 +836,6 @@ export default function FishingMap({
           zone={selectedZone}
           result={result}
           intelligence={selectedIntelligence}
-          currentIntelligence={currentIntelligence ?? selectedIntelligence}
           snapshot={selectedSnapshot}
           detectedVessels={selectedVesselCount}
           onClose={() => setSelectedZoneId(null)}
