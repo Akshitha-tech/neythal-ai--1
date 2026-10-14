@@ -1,0 +1,26 @@
+{
+  "title": "ETOPO 2022 bathymetry/topography, 30 arc-second subset",
+  "source": "NOAA NCEI ETOPO 2022 v1 (15 arc-second), via NOAA CoastWatch ERDDAP ETOPO_2022_v1_15s",
+  "sourceUrl": "https://www.ncei.noaa.gov/products/etopo-global-relief-model",
+  "doi": "10.25921/fd45-gt74",
+  "generated": "2026-10-06",
+  "file": "bathymetry_etopo2022_30s.bin",
+  "dtype": "int16 little-endian",
+  "units": "metres relative to mean sea level (negative = below sea level)",
+  "rows": 397,
+  "cols": 373,
+  "northLat": 10.802083333333334,
+  "southLat": 7.502083333333333,
+  "westLon": 77.50208333333333,
+  "eastLon": 80.60208333333333,
+  "stepDeg": 0.008333333333333318,
+  "order": "row-major, first row = northLat, first column = westLon",
+  "lookup": "row = round((northLat - lat) / stepDeg); col = round((lon - westLon) / stepDeg)",
+  "notForNavigation": true,
+  "stats": {
+    "cells": 148081,
+    "seaCells": 72975,
+    "minM": -2443,
+    "maxM": 2059
+  }
+}

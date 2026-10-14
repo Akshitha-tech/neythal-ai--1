@@ -1,0 +1,49 @@
+{
+  "file": "palk_strait_tracks_1min.csv.gz",
+  "source": "SIMULATED",
+  "seed": 2026,
+  "settings": {
+    "vessels": 120,
+    "trips": 450,
+    "targetNearImblShare": 0.35,
+    "nearImblBandNm": [
+      0.5,
+      6.0
+    ],
+    "maxRangeNm": 30.0,
+    "minDepthM": 1.5
+  },
+  "harbours": [
+    "Kottaippattinam Fishing Port",
+    "Rameswaram Fishing Harbour and Boat Jetty",
+    "Thoothukudi Fishing Harbour",
+    "Aalanthalai Harbour",
+    "Muthuregunathapuram Harbour",
+    "Nagapattinam Harbour",
+    "Nambiyar Nagar Harbour",
+    "Vellapanam Harbour",
+    "unnamed harbour (node/1769189560)",
+    "Kodikkarai",
+    "MV Pattinam Pier",
+    "Udangudi Pier",
+    "Chinna Muttom Harbour",
+    "Nagapattinam International Harbour",
+    "V.O.Chidambaranar Port (Port of Tuticorin)",
+    "unnamed port (way/577750403)",
+    "unnamed port (relation/11278577)"
+  ],
+  "counts": {
+    "trips": 450,
+    "rows": 467417,
+    "tripsTargetingNearImbl": 33,
+    "tripsCrossingImbl": 43,
+    "rowsBeyondImbl": 11759,
+    "rowsCrossingWithin10min": 470,
+    "rowsCrossingWithin20min": 936,
+    "rowsCrossingWithin30min": 1396,
+    "rowsWithin1NmOfImbl": 1196,
+    "rowsWithin2NmOfImbl": 2593,
+    "rowsWithin5NmOfImbl": 7721,
+    "rowsWithin8NmOfImbl": 13552
+  }
+}

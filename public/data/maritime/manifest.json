@@ -1,0 +1,164 @@
+{
+  "title": "Neythal maritime datasets",
+  "generated": "2026-10-06",
+  "basePath": "/data/maritime/",
+  "documentation": "data/README.md",
+  "notForNavigation": true,
+  "datasets": [
+    {
+      "id": "imbl",
+      "files": [
+        "imbl.geojson"
+      ],
+      "bytes": 52788,
+      "generated": "2026-10-06",
+      "use": "IMBL geofencing and distance-to-boundary alerts",
+      "source": "India-Sri Lanka boundary treaties 1974 and 1976; cross-checked with Marine Regions v12",
+      "licence": "Treaty text (public); Marine Regions CC-BY 4.0"
+    },
+    {
+      "id": "maritime_zones",
+      "files": [
+        "maritime_zones.geojson"
+      ],
+      "bytes": 160778,
+      "generated": "2026-10-06",
+      "use": "Territorial sea (12 NM), contiguous zone (24 NM), internal waters, baselines",
+      "source": "Marine Regions Maritime Boundaries v12 (Flanders Marine Institute)",
+      "licence": "CC-BY 4.0"
+    },
+    {
+      "id": "bathymetry_etopo2022_30s",
+      "files": [
+        "bathymetry_etopo2022_30s.json",
+        "bathymetry_etopo2022_30s.bin"
+      ],
+      "bytes": 297114,
+      "generated": "2026-10-06",
+      "use": "Water depth for grounding risk (header; grid in the .bin file)",
+      "source": "NOAA NCEI ETOPO 2022, 30 arc-second subset",
+      "licence": "NOAA, free to use; not for navigation"
+    },
+    {
+      "id": "osm_harbours",
+      "files": [
+        "osm_harbours.geojson"
+      ],
+      "bytes": 12433,
+      "generated": "2026-10-06",
+      "use": "Harbours, fishing ports and jetties",
+      "source": "OpenStreetMap",
+      "licence": "ODbL 1.0, (c) OpenStreetMap contributors"
+    },
+    {
+      "id": "osm_hazards",
+      "files": [
+        "osm_hazards.geojson"
+      ],
+      "bytes": 438404,
+      "generated": "2026-10-06",
+      "use": "Reefs, shoals, wrecks, islands, lights, cables and pipelines",
+      "source": "OpenStreetMap",
+      "licence": "ODbL 1.0, (c) OpenStreetMap contributors"
+    },
+    {
+      "id": "osm_protected_areas",
+      "files": [
+        "osm_protected_areas.geojson"
+      ],
+      "bytes": 173919,
+      "generated": "2026-10-06",
+      "use": "Marine national park and sanctuaries (restricted-activity zones)",
+      "source": "OpenStreetMap",
+      "licence": "ODbL 1.0, (c) OpenStreetMap contributors"
+    },
+    {
+      "id": "ocean_weather_points",
+      "files": [
+        "ocean_weather_points.geojson"
+      ],
+      "bytes": 3368,
+      "generated": "2026-10-06",
+      "use": "Sample points for the hourly ocean/weather series",
+      "source": "Open-Meteo (Copernicus Marine MFWAM and SMOC, ERA5, NOAA GFS)",
+      "licence": "CC-BY 4.0"
+    },
+    {
+      "id": "ocean_climatology",
+      "files": [
+        "ocean_climatology.json"
+      ],
+      "bytes": 49749,
+      "generated": "2026-10-06",
+      "use": "Offline sea-state, wind, current, SST and visibility statistics by month",
+      "source": "Open-Meteo (Copernicus Marine MFWAM and SMOC, ERA5, NOAA GFS), 2023-2025",
+      "licence": "CC-BY 4.0"
+    },
+    {
+      "id": "sst_monthly_climatology",
+      "files": [
+        "sst_monthly_climatology.json"
+      ],
+      "bytes": 279877,
+      "generated": "2026-10-06",
+      "use": "Sea surface temperature map by month (fishing suitability)",
+      "source": "NOAA Coral Reef Watch CoralTemp v3.1, 5 km",
+      "licence": "NOAA, free to use"
+    },
+    {
+      "id": "chlorophyll_monthly_climatology",
+      "files": [
+        "chlorophyll_monthly_climatology.json"
+      ],
+      "bytes": 126231,
+      "generated": "2026-10-06",
+      "use": "Chlorophyll-a map by month (fishing suitability / productivity)",
+      "source": "NOAA NESDIS / NASA S-NPP VIIRS, 4 km monthly",
+      "licence": "NASA Earth science data policy, free to use"
+    },
+    {
+      "id": "waves_monthly_climatology",
+      "files": [
+        "waves_monthly_climatology.json"
+      ],
+      "bytes": 7689,
+      "generated": "2026-10-06",
+      "use": "Wave height map by month (sea-condition risk)",
+      "source": "NOAA NCEP WaveWatch III, 0.5 deg",
+      "licence": "NOAA, free to use"
+    },
+    {
+      "id": "weather_stations",
+      "files": [
+        "weather_stations.geojson"
+      ],
+      "bytes": 2444,
+      "generated": "2026-10-06",
+      "use": "Coastal weather stations (observations)",
+      "source": "NOAA NCEI Integrated Surface Database (IMD and Sri Lanka Met Dept reports)",
+      "licence": "NOAA, public domain"
+    },
+    {
+      "id": "weather_station_climatology",
+      "files": [
+        "weather_station_climatology.json"
+      ],
+      "bytes": 17258,
+      "generated": "2026-10-06",
+      "use": "Observed wind, fog and thunderstorm frequency by month",
+      "source": "NOAA NCEI Integrated Surface Database, 2023-2025",
+      "licence": "NOAA, public domain"
+    },
+    {
+      "id": "fisheries_summary",
+      "files": [
+        "fisheries_summary.json"
+      ],
+      "bytes": 7693,
+      "generated": "2026-10-06",
+      "use": "Main species and fishing gears (fishing information)",
+      "source": "FAO Global Capture Production 2025.1.0 (Area 57); Sea Around Us EEZ reconstruction",
+      "licence": "FAO CC BY 4.0; Sea Around Us CC BY-NC 4.0"
+    }
+  ]
+}

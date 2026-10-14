@@ -1,0 +1,1243 @@
+import MaritimeMap from "./MaritimeMap";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Stars } from "@react-three/drei";
+import { useCallback, useEffect, useRef, useState } from "react";
+import * as THREE from "three";
+
+import {
+  SAFETY_ALERT_CONTENT,
+  type SafetyAlertLanguage,
+  type SafetyZone,
+} from "./neythalAI";
+import NeythalChatbot from "./components/NeythalChatbot";
+import MarineFishingIntelligence, {
+  type MarineOceanReadings,
+} from "./components/fishing/MarineFishingIntelligence";
+
+const RADAR_VIEWBOX_SIZE = 100;
+const RADAR_CENTER = RADAR_VIEWBOX_SIZE / 2;
+const RADAR_SECTOR_RADIUS = RADAR_CENTER - 2;
+const RADAR_SECTOR_HALF_ANGLE = (24 * Math.PI) / 180;
+const RESTRICTED_MARKER_POSITION = { x: 73, y: 34 };
+const HIGH_RISK_MARKER_POSITION = { x: 29, y: 67 };
+
+const SAFETY_ZONE_PRIORITY: Record<SafetyZone, number> = {
+  SAFE: 0,
+  CAUTION: 1,
+  WARNING: 2,
+  CRITICAL: 3,
+};
+
+const SPEECH_LOCALE: Record<SafetyAlertLanguage, string> = {
+  en: "en-IN",
+  ta: "ta-IN",
+  ml: "ml-IN",
+};
+
+type PendingSafetyAlert = {
+  zone: SafetyZone;
+};
+
+function createRadarSector(
+  center: { x: number; y: number },
+  radius: number,
+  startAngle: number,
+  endAngle: number
+) {
+  const startX = center.x + radius * Math.cos(startAngle);
+  const startY = center.y + radius * Math.sin(startAngle);
+  const endX = center.x + radius * Math.cos(endAngle);
+  const endY = center.y + radius * Math.sin(endAngle);
+
+  return [
+    `M ${center.x} ${center.y}`,
+    `L ${startX} ${startY}`,
+    `A ${radius} ${radius} 0 0 1 ${endX} ${endY}`,
+    "Z",
+  ].join(" ");
+}
+
+function getRadarSectorPath(marker: { x: number; y: number }) {
+  const angle = Math.atan2(marker.y - RADAR_CENTER, marker.x - RADAR_CENTER);
+
+  return createRadarSector(
+    { x: RADAR_CENTER, y: RADAR_CENTER },
+    RADAR_SECTOR_RADIUS,
+    angle - RADAR_SECTOR_HALF_ANGLE,
+    angle + RADAR_SECTOR_HALF_ANGLE
+  );
+}
+
+/* =========================================================
+   OCEAN
+========================================================= */
+
+function Ocean() {
+  const meshRef = useRef<THREE.Mesh>(null);
+
+  useFrame(({ clock }) => {
+    if (!meshRef.current) return;
+
+    const time = clock.getElapsedTime();
+    const position = meshRef.current.geometry.attributes.position;
+
+    for (let i = 0; i < position.count; i++) {
+      const x = position.getX(i);
+      const y = position.getY(i);
+
+      const wave =
+        Math.sin(x * 0.75 + time * 1.1) * 0.12 +
+        Math.cos(y * 0.65 + time * 0.9) * 0.08 +
+        Math.sin((x + y) * 0.35 + time) * 0.04;
+
+      position.setZ(i, wave);
+    }
+
+    position.needsUpdate = true;
+    meshRef.current.geometry.computeVertexNormals();
+  });
+
+  return (
+    <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]}>
+      <planeGeometry args={[35, 35, 100, 100]} />
+
+      <meshStandardMaterial color="#063746" metalness={0.75} roughness={0.22} />
+    </mesh>
+  );
+}
+
+/* =========================================================
+   BOAT WAKE
+========================================================= */
+
+function BoatWake() {
+  const wakeRef = useRef<THREE.Group>(null);
+
+  useFrame(({ clock }) => {
+    if (!wakeRef.current) return;
+
+    const t = clock.getElapsedTime();
+
+    wakeRef.current.scale.x = 1 + Math.sin(t * 2) * 0.08;
+
+    wakeRef.current.scale.z = 1 + Math.sin(t * 1.7) * 0.06;
+  });
+
+  return (
+    <group
+      ref={wakeRef}
+      position={[0, -0.91, 0]}
+      rotation={[-Math.PI / 2, 0, 0]}
+    >
+      <mesh position={[-0.6, 0, 0]}>
+        <circleGeometry args={[0.7, 32]} />
+
+        <meshBasicMaterial color="#43d9dd" transparent opacity={0.13} />
+      </mesh>
+
+      <mesh position={[-1.2, 0, 0]}>
+        <circleGeometry args={[0.45, 32]} />
+
+        <meshBasicMaterial color="#8ffcff" transparent opacity={0.08} />
+      </mesh>
+
+      <mesh position={[-1.8, 0, 0]}>
+        <circleGeometry args={[0.25, 32]} />
+
+        <meshBasicMaterial color="#8ffcff" transparent opacity={0.05} />
+      </mesh>
+    </group>
+  );
+}
+
+/* =========================================================
+   REALISTIC FISHING BOAT
+========================================================= */
+
+function Boat() {
+  const boatRef = useRef<THREE.Group>(null);
+
+  useFrame(({ clock }) => {
+    if (!boatRef.current) return;
+
+    const t = clock.getElapsedTime();
+
+    boatRef.current.position.y = Math.sin(t * 1.15) * 0.055;
+
+    boatRef.current.rotation.z = Math.sin(t * 0.75) * 0.018;
+
+    boatRef.current.rotation.x = Math.sin(t * 0.55) * 0.012;
+  });
+
+  return (
+    <group
+      ref={boatRef}
+      position={[1.3, -0.05, 0]}
+      rotation={[0, 0.25, 0]}
+      scale={1.05}
+    >
+      <mesh position={[0, 0, 0]} scale={[2.35, 0.48, 0.85]}>
+        <sphereGeometry args={[1, 32, 20]} />
+
+        <meshStandardMaterial
+          color="#102e38"
+          metalness={0.65}
+          roughness={0.25}
+        />
+      </mesh>
+
+      <mesh position={[0, 0.18, 0]} scale={[2.25, 0.23, 0.86]}>
+        <sphereGeometry args={[1, 32, 20]} />
+
+        <meshStandardMaterial color="#d9eeee" metalness={0.3} roughness={0.3} />
+      </mesh>
+
+      <mesh position={[0, -0.25, 0]} scale={[1.9, 0.22, 0.72]}>
+        <sphereGeometry args={[1, 32, 16]} />
+
+        <meshStandardMaterial
+          color="#06151b"
+          metalness={0.75}
+          roughness={0.2}
+        />
+      </mesh>
+
+      <mesh position={[1.75, 0.08, 0]} rotation={[0, 0, -Math.PI / 2]}>
+        <coneGeometry args={[0.72, 1.45, 5]} />
+
+        <meshStandardMaterial color="#d9eeee" metalness={0.3} roughness={0.3} />
+      </mesh>
+
+      <mesh position={[-0.1, 0.48, 0]} scale={[1.55, 0.08, 0.7]}>
+        <boxGeometry args={[1, 1, 1]} />
+
+        <meshStandardMaterial
+          color="#173e48"
+          metalness={0.45}
+          roughness={0.38}
+        />
+      </mesh>
+
+      <mesh position={[-0.45, 0.83, 0]} scale={[0.82, 0.55, 0.62]}>
+        <boxGeometry args={[1, 1, 1]} />
+
+        <meshStandardMaterial
+          color="#dff6f6"
+          metalness={0.25}
+          roughness={0.3}
+        />
+      </mesh>
+
+      <mesh position={[0.0, 0.88, -0.635]}>
+        <boxGeometry args={[0.58, 0.3, 0.025]} />
+
+        <meshStandardMaterial
+          color="#061c25"
+          metalness={0.8}
+          roughness={0.12}
+          emissive="#087c91"
+          emissiveIntensity={0.35}
+        />
+      </mesh>
+
+      <mesh position={[-0.47, 0.9, 0.635]}>
+        <boxGeometry args={[0.55, 0.3, 0.025]} />
+
+        <meshStandardMaterial
+          color="#061c25"
+          metalness={0.8}
+          roughness={0.12}
+          emissive="#087c91"
+          emissiveIntensity={0.35}
+        />
+      </mesh>
+
+      <mesh position={[-0.47, 0.9, -0.635]}>
+        <boxGeometry args={[0.55, 0.3, 0.025]} />
+
+        <meshStandardMaterial
+          color="#061c25"
+          metalness={0.8}
+          roughness={0.12}
+          emissive="#087c91"
+          emissiveIntensity={0.35}
+        />
+      </mesh>
+
+      <mesh position={[-0.45, 1.15, 0]} scale={[0.94, 0.09, 0.7]}>
+        <boxGeometry args={[1, 1, 1]} />
+
+        <meshStandardMaterial
+          color="#efffff"
+          metalness={0.2}
+          roughness={0.28}
+        />
+      </mesh>
+
+      <mesh position={[-0.45, 1.75, 0]}>
+        <cylinderGeometry args={[0.035, 0.045, 1.25, 16]} />
+
+        <meshStandardMaterial
+          color="#a9c9cc"
+          metalness={0.85}
+          roughness={0.2}
+        />
+      </mesh>
+
+      <mesh position={[-0.45, 2.48, 0]}>
+        <cylinderGeometry args={[0.012, 0.012, 0.45, 12]} />
+
+        <meshStandardMaterial
+          color="#e5ffff"
+          metalness={0.8}
+          roughness={0.15}
+        />
+      </mesh>
+
+      <mesh position={[-0.45, 2.15, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.18, 0.08, 0.045, 32]} />
+
+        <meshStandardMaterial
+          color="#58777c"
+          metalness={0.75}
+          roughness={0.25}
+        />
+      </mesh>
+
+      <mesh position={[-0.25, 2.25, 0]} rotation={[0, 0, -0.15]}>
+        <boxGeometry args={[0.45, 0.025, 0.025]} />
+
+        <meshStandardMaterial color="#a8d1d3" metalness={0.8} />
+      </mesh>
+
+      <mesh position={[1.55, 0.55, 0]}>
+        <sphereGeometry args={[0.065, 20, 20]} />
+
+        <meshStandardMaterial
+          color="#ffffff"
+          emissive="#43d9dd"
+          emissiveIntensity={5}
+        />
+      </mesh>
+
+      <pointLight
+        position={[1.55, 0.55, 0]}
+        color="#43d9dd"
+        intensity={2}
+        distance={3}
+      />
+
+      <mesh position={[-0.45, 1.25, 0]}>
+        <sphereGeometry args={[0.045, 16, 16]} />
+
+        <meshStandardMaterial
+          color="#ffffff"
+          emissive="#ffffff"
+          emissiveIntensity={4}
+        />
+      </mesh>
+
+      <mesh position={[-1.5, 0.57, 0]} scale={[0.38, 0.38, 0.45]}>
+        <boxGeometry args={[1, 1, 1]} />
+
+        <meshStandardMaterial
+          color="#102b32"
+          metalness={0.65}
+          roughness={0.3}
+        />
+      </mesh>
+
+      <mesh position={[0.75, 0.67, 0.62]}>
+        <cylinderGeometry args={[0.018, 0.018, 0.4, 8]} />
+
+        <meshStandardMaterial color="#bdd7d9" metalness={0.85} />
+      </mesh>
+
+      <mesh position={[1.25, 0.67, 0.62]}>
+        <cylinderGeometry args={[0.018, 0.018, 0.4, 8]} />
+
+        <meshStandardMaterial color="#bdd7d9" metalness={0.85} />
+      </mesh>
+
+      <mesh position={[1, 0.85, 0.62]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.015, 0.015, 0.55, 8]} />
+
+        <meshStandardMaterial color="#bdd7d9" metalness={0.85} />
+      </mesh>
+
+      <pointLight
+        position={[0, -0.65, 0]}
+        color="#00d9ff"
+        intensity={2.5}
+        distance={4}
+      />
+    </group>
+  );
+}
+
+/* =========================================================
+   MARITIME THREAT ZONE
+========================================================= */
+
+function ThreatZone() {
+  const ringRef = useRef<THREE.Mesh>(null);
+
+  useFrame(({ clock }) => {
+    if (!ringRef.current) return;
+
+    const t = clock.getElapsedTime();
+
+    ringRef.current.scale.setScalar(1 + Math.sin(t * 2) * 0.05);
+
+    ringRef.current.rotation.z = t * 0.15;
+  });
+
+  return (
+    <group position={[3.5, -0.75, -1]}>
+      <mesh ref={ringRef}>
+        <torusGeometry args={[1.25, 0.035, 16, 80]} />
+
+        <meshStandardMaterial
+          color="#ff786d"
+          emissive="#ff3d32"
+          emissiveIntensity={2}
+        />
+      </mesh>
+
+      <pointLight
+        position={[0, 0, 0]}
+        color="#ff786d"
+        intensity={2}
+        distance={4}
+      />
+    </group>
+  );
+}
+
+/* =========================================================
+   MAIN 3D SCENE
+========================================================= */
+
+function Scene() {
+  const { pointer } = useThree();
+
+  const cameraTarget = useRef(new THREE.Vector3());
+
+  useFrame(({ camera }) => {
+    const scroll = window.scrollY / Math.max(window.innerHeight, 1);
+
+    const progress = THREE.MathUtils.clamp(scroll, 0, 1);
+
+    const targetX = THREE.MathUtils.lerp(0, 1.2, progress);
+
+    const targetY = THREE.MathUtils.lerp(4.5, 3.5, progress);
+
+    const targetZ = THREE.MathUtils.lerp(7, 6, progress);
+
+    const mouseX = pointer.x * 0.35;
+    const mouseY = pointer.y * 0.2;
+
+    camera.position.x = THREE.MathUtils.lerp(
+      camera.position.x,
+      targetX + mouseX,
+      0.035,
+    );
+
+    camera.position.y = THREE.MathUtils.lerp(
+      camera.position.y,
+      targetY + mouseY,
+      0.035,
+    );
+
+    camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetZ, 0.035);
+
+    cameraTarget.current.set(pointer.x * 0.2, -0.25 + pointer.y * 0.1, 0);
+
+    camera.lookAt(cameraTarget.current);
+  });
+
+  return (
+    <>
+      <ambientLight intensity={0.45} />
+
+      <directionalLight position={[5, 8, 5]} intensity={1.8} color="#b8f5ff" />
+
+      <pointLight
+        position={[0, 3, 1]}
+        intensity={3}
+        distance={12}
+        color="#087c91"
+      />
+
+      <Stars
+        radius={80}
+        depth={45}
+        count={2200}
+        factor={3}
+        saturation={0}
+        fade
+        speed={0.35}
+      />
+
+      <Ocean />
+
+      <BoatWake />
+
+      <Boat />
+
+      <ThreatZone />
+    </>
+  );
+}
+
+/* =========================================================
+   WEBSITE
+========================================================= */
+/* =========================================================
+   GLOBAL HEADER
+========================================================= */
+
+function GlobalHeader({
+  safetyZone,
+  alertLanguage,
+  isConnected,
+  setIsConnected,
+}: {
+  safetyZone: SafetyZone;
+  alertLanguage: SafetyAlertLanguage;
+  isConnected: boolean;
+  setIsConnected: (value: boolean) => void;
+}) {
+  const [sosOpen, setSosOpen] = useState(false);
+
+  const navigation = [
+    { label: "HOME", id: "home" },
+    { label: "SAFETY", id: "safety" },
+    { label: "OCEAN", id: "ocean" },
+    { label: "FISHING", id: "fishing" },
+    { label: "LIVE MAP", id: "live-map" },
+  ];
+
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+
+    if (element) {
+      element.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  };
+
+  const zoneLabel = SAFETY_ALERT_CONTENT[alertLanguage][safetyZone].label;
+  const getRiskLabel = () => {
+    if (alertLanguage === "ta") return `ஆபத்து நிலை: ${zoneLabel}`;
+    if (alertLanguage === "ml") return `അപകടനില: ${zoneLabel}`;
+    return `RISK: ${zoneLabel}`;
+  };
+
+  return (
+    <>
+      <header className="neythal-global-header">
+        {/* BRAND */}
+        <div
+          className="neythal-header-brand"
+          onClick={() => scrollToSection("home")}
+        >
+          <div className="neythal-header-logo">
+            <span>N</span>
+          </div>
+
+          <div className="neythal-header-brand-text">
+            <div className="neythal-header-name">
+              NEYTHAL <span>AI</span>
+            </div>
+
+            <div className="neythal-header-subtitle">
+              MARITIME SAFETY SYSTEM
+            </div>
+          </div>
+        </div>
+
+        {/* NAVIGATION */}
+        <nav className="neythal-global-nav">
+          {navigation.map((item) => (
+            <button
+              key={item.id}
+              className="neythal-nav-item"
+              onClick={() => scrollToSection(item.id)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </nav>
+
+        {/* RIGHT SIDE */}
+        <div className="neythal-header-actions">
+          {/* RISK */}
+          <div
+            className={`neythal-risk-indicator risk-${safetyZone.toLowerCase()}`}
+          >
+            <span className="risk-dot" />
+            <span>{getRiskLabel()}</span>
+          </div>
+
+          {/* GPS */}
+          <div className="neythal-gps-status">
+            <span className="gps-pulse" />
+            <span className="gps-label">GPS</span>
+            <strong>{isConnected ? "ACTIVE" : "OFFLINE"}</strong>
+          </div>
+
+          {/* CONNECTION */}
+          <button
+            className={`neythal-connection ${
+              isConnected ? "connected" : "disconnected"
+            }`}
+            onClick={() => setIsConnected(!isConnected)}
+          >
+            <span className="connection-icon">{isConnected ? "◉" : "○"}</span>
+
+            {isConnected ? "CONNECTED" : "OFFLINE"}
+          </button>
+
+          {/* OFFLINE SOS */}
+          <button
+            className="neythal-sos-button"
+            onClick={() => setSosOpen(true)}
+          >
+            <span className="sos-symbol">⚠</span>
+            <span>SOS</span>
+          </button>
+        </div>
+      </header>
+
+      {/* SOS WINDOW */}
+      {sosOpen && (
+        <div className="neythal-sos-overlay">
+          <div className="neythal-sos-panel">
+            <button
+              className="neythal-sos-close"
+              onClick={() => setSosOpen(false)}
+            >
+              ×
+            </button>
+
+            <div className="neythal-sos-icon">⚠</div>
+
+            <div className="neythal-sos-eyebrow">NEYTHAL // EMERGENCY MODE</div>
+
+            <h2>OFFLINE SOS</h2>
+
+            <p>
+              Emergency mode remains available when network connectivity is
+              unavailable.
+            </p>
+
+            <div className="neythal-sos-status">
+              <div>
+                <span>GPS STATUS</span>
+
+                <strong>{isConnected ? "ACTIVE" : "LAST KNOWN"}</strong>
+              </div>
+
+              <div>
+                <span>NETWORK</span>
+
+                <strong>{isConnected ? "CONNECTED" : "OFFLINE"}</strong>
+              </div>
+            </div>
+
+            <button
+              className="neythal-emergency-button"
+              onClick={() => {
+                alert("NEYTHAL EMERGENCY MODE ACTIVATED");
+              }}
+            >
+              ACTIVATE EMERGENCY MODE
+            </button>
+
+            <div className="neythal-sos-note">
+              Emergency actions will use the vessel's latest available position.
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+export default function App() {
+  const [showSOS, setShowSOS] = useState(false);
+  const [safetyZone, setSafetyZone] = useState<SafetyZone>("SAFE");
+  const [alertLanguage, setAlertLanguage] =
+    useState<SafetyAlertLanguage>("en");
+  const [voiceStatus, setVoiceStatus] = useState<string | null>(null);
+  const [oceanReadings, setOceanReadings] =
+    useState<MarineOceanReadings | null>(null);
+
+  const [chatOpen, setChatOpen] = useState(false);
+
+  const [isConnected, setIsConnected] = useState(true);
+
+  const oceanTelemetrySource =
+    oceanReadings?.source === "SIMULATED"
+      ? "SIMULATED"
+      : oceanReadings?.source === "CACHED"
+        ? "CACHED"
+        : oceanReadings
+          ? "LIVE"
+          : "—";
+
+  const speechQueueRef = useRef<PendingSafetyAlert[]>([]);
+  const activeSpeechRef = useRef<{
+    zone: SafetyZone;
+    generation: number;
+  } | null>(null);
+  const speechGenerationRef = useRef(0);
+  const speakNextSafetyAlertRef = useRef<() => void>(() => {});
+
+  const speakNextSafetyAlert = useCallback(() => {
+    if (
+      typeof window === "undefined" ||
+      !("speechSynthesis" in window) ||
+      activeSpeechRef.current
+    ) {
+      return;
+    }
+
+    const nextAlert = speechQueueRef.current.shift();
+    if (!nextAlert) return;
+
+    const speech = new SpeechSynthesisUtterance(
+      SAFETY_ALERT_CONTENT[alertLanguage][nextAlert.zone].message
+    );
+    const locale = SPEECH_LOCALE[alertLanguage];
+    const voices = window.speechSynthesis.getVoices();
+    const voice =
+      voices.find((availableVoice) => availableVoice.lang.toLowerCase() === locale.toLowerCase()) ??
+      voices.find((availableVoice) =>
+        availableVoice.lang.toLowerCase().startsWith(`${alertLanguage}-`)
+      );
+
+    speech.lang = locale;
+    speech.rate = 0.92;
+    speech.pitch = 1;
+    if (voice) speech.voice = voice;
+
+    const generation = ++speechGenerationRef.current;
+    activeSpeechRef.current = { zone: nextAlert.zone, generation };
+
+    speech.onend = () => {
+      if (speechGenerationRef.current !== generation) return;
+      activeSpeechRef.current = null;
+      setVoiceStatus(null);
+      speakNextSafetyAlertRef.current();
+    };
+    speech.onerror = (event) => {
+      if (speechGenerationRef.current !== generation) return;
+      activeSpeechRef.current = null;
+      setVoiceStatus(`Voice alert failed: ${event.error}.`);
+      speakNextSafetyAlertRef.current();
+    };
+
+    window.speechSynthesis.speak(speech);
+  }, [alertLanguage]);
+
+  useEffect(() => {
+    speakNextSafetyAlertRef.current = speakNextSafetyAlert;
+  }, [speakNextSafetyAlert]);
+
+  const handleSafetyChange = useCallback((zone: SafetyZone) => {
+    setSafetyZone(zone);
+
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+      setVoiceStatus("Voice alerts are not supported in this browser.");
+      return;
+    }
+
+    const alert = { zone };
+    const activeAlert = activeSpeechRef.current;
+
+    if (
+      activeAlert &&
+      SAFETY_ZONE_PRIORITY[zone] > SAFETY_ZONE_PRIORITY[activeAlert.zone]
+    ) {
+      speechQueueRef.current = speechQueueRef.current.filter(
+        (queuedAlert) =>
+          SAFETY_ZONE_PRIORITY[queuedAlert.zone] >= SAFETY_ZONE_PRIORITY[zone]
+      );
+      speechGenerationRef.current++;
+      window.speechSynthesis.cancel();
+      activeSpeechRef.current = null;
+      speechQueueRef.current.unshift(alert);
+    } else {
+      speechQueueRef.current.push(alert);
+    }
+
+    speakNextSafetyAlert();
+  }, [speakNextSafetyAlert]);
+
+  useEffect(
+    () => () => {
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+    },
+    []
+  );
+
+  return (
+    <main className="neythal-site">
+      {/* =====================================================
+    GLOBAL NEYTHAL HEADER
+===================================================== */}
+
+      <GlobalHeader
+        safetyZone={safetyZone}
+        alertLanguage={alertLanguage}
+        isConnected={isConnected}
+        setIsConnected={setIsConnected}
+      />
+
+      {/* =====================================================
+          SECTION 01 — HERO
+      ===================================================== */}
+
+      <section id="home" className="hero-section">
+        <div className="hero-overlay">
+          <div className="brand">NEYTHAL</div>
+
+          <div className="hero-content">
+            <p className="eyebrow">AI MARITIME INTELLIGENCE</p>
+
+            <h1>
+              THE SEA
+              <br />
+              NEVER
+              <br />
+              STOPS.
+            </h1>
+
+            <p className="hero-description">
+              AI-powered maritime safety and fishing intelligence designed for
+              the people who live by the sea.
+            </p>
+
+            <button
+              className="explore-button"
+              onClick={() => {
+                document.getElementById("safety")?.scrollIntoView({
+                  behavior: "smooth",
+                });
+              }}
+            >
+              EXPLORE NEYTHAL
+              <span>→</span>
+            </button>
+          </div>
+
+          <div className="status">
+            <span className="status-dot" />
+            SYSTEM ONLINE
+          </div>
+
+          <div className="bottom-label">MARITIME INTELLIGENCE / 01</div>
+        </div>
+
+        <Canvas
+          camera={{
+            position: [0, 4.5, 7],
+            fov: 50,
+          }}
+        >
+          <Scene />
+        </Canvas>
+      </section>
+
+      {/* =====================================================
+          SECTION 02 — MARITIME THREAT
+      ===================================================== */}
+
+      <section id="safety" className="threat-section">
+        <div className="threat-content">
+          <p className="section-number">02 / MARITIME THREAT</p>
+
+          <h2>
+            THE SEA
+            <br />
+            CAN CHANGE
+            <br />
+            IN MINUTES.
+          </h2>
+
+          <p className="threat-description">
+            Ocean conditions can shift rapidly. Strong winds, rough seas and
+            maritime hazards can turn a safe journey into a dangerous one.
+          </p>
+
+          <div className="threat-status">
+            <div className="threat-indicator">
+              <span />
+              LIVE OCEAN MONITORING
+            </div>
+
+            <div className="threat-indicator">
+              <span />
+              HAZARD DETECTION ACTIVE
+            </div>
+          </div>
+        </div>
+
+        <div className="threat-visual">
+          <div className="radar-ring radar-one" />
+
+          <div className="radar-ring radar-two" />
+
+          <div className="radar-ring radar-three" />
+
+          <button
+            className="danger-core"
+            onClick={() => setShowSOS(true)}
+            aria-label="Open SOS dashboard"
+          >
+            !
+          </button>
+
+          <div className="danger-label">
+            <span>DANGER ZONE</span>
+            <small>DETECTED AHEAD</small>
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          SECTION 03 — OCEAN INTELLIGENCE
+      ===================================================== */}
+
+      <section id="ocean" className="intelligence-section">
+        <div className="intelligence-header">
+          <p className="section-number">03 / OCEAN INTELLIGENCE</p>
+
+          <h2>
+            READ
+            <br />
+            THE OCEAN.
+          </h2>
+
+          <p className="intelligence-description">
+            Neythal continuously interprets ocean conditions to understand what
+            is happening beneath and around the vessel.
+          </p>
+        </div>
+
+        <div className="ocean-data-visual">
+          <div className="ocean-grid" />
+
+          <div className="wave-line wave-line-one" />
+
+          <div className="wave-line wave-line-two" />
+
+          <div className="wave-line wave-line-three" />
+
+          <div className="data-point point-one">
+            <span />
+          </div>
+
+          <div className="data-point point-two">
+            <span />
+          </div>
+
+          <div className="data-point point-three">
+            <span />
+          </div>
+
+          <div className="ocean-center">
+            <div className="center-ring" />
+
+            <div className="center-core">
+              <span>{oceanTelemetrySource}</span>
+              OCEAN
+            </div>
+          </div>
+        </div>
+
+        <div className="telemetry-grid">
+          <div className="telemetry-card">
+            <span className="telemetry-label">SEA STATE</span>
+
+            <strong>MODERATE</strong>
+
+            <span className="telemetry-status">STABLE</span>
+          </div>
+
+          <div className="telemetry-card">
+            <span className="telemetry-label">WIND</span>
+
+            <strong>
+              {oceanReadings?.windSpeed?.toFixed(1) ?? "—"}
+              <small> KM/H</small>
+            </strong>
+
+            <span className="telemetry-status">
+              ↗ {oceanReadings?.windDirection?.toUpperCase() ?? "—"}
+            </span>
+          </div>
+
+          <div className="telemetry-card">
+            <span className="telemetry-label">WAVE HEIGHT</span>
+
+            <strong>
+              {oceanReadings?.waveHeight?.toFixed(1) ?? "—"}
+              <small> M</small>
+            </strong>
+
+            <span className="telemetry-status">NORMAL</span>
+          </div>
+
+          <div className="telemetry-card">
+            <span className="telemetry-label">WATER TEMP</span>
+
+            <strong>
+              {oceanReadings?.seaSurfaceTemperature?.toFixed(1) ?? "—"}
+              <small> °C</small>
+            </strong>
+
+            <span className="telemetry-status">OPTIMAL</span>
+          </div>
+        </div>
+
+        <div className="telemetry-footer">
+          <span>● {oceanTelemetrySource} TELEMETRY</span>
+
+          <span>BAY OF BENGAL</span>
+
+          <span>DATA STREAM / ACTIVE</span>
+        </div>
+      </section>
+
+      {/* =====================================================
+          SECTION 04 — MARITIME SAFETY
+      ===================================================== */}
+
+      <section id="maritime-safety" className="safety-section">
+        <div className="safety-header">
+          <p className="section-number">04 / MARITIME SAFETY</p>
+
+          <h2>
+            KNOW
+            <br />
+            THE DANGER.
+          </h2>
+
+          <p className="safety-description">
+            Neythal continuously monitors the vessel's surroundings, maritime
+            boundaries and changing sea conditions to identify potential threats
+            before they become critical.
+          </p>
+        </div>
+
+        {/* RADAR */}
+
+        <div className="radar-system">
+          <div className="radar-grid" />
+
+          <div className="radar-ring radar-ring-one" />
+          <div className="radar-ring radar-ring-two" />
+          <div className="radar-ring radar-ring-three" />
+          <div className="radar-ring radar-ring-four" />
+
+          <div className="radar-cross horizontal" />
+          <div className="radar-cross vertical" />
+
+          <svg
+            className="radar-sweep"
+            viewBox="0 0 100 100"
+            aria-hidden="true"
+          >
+            <path d={getRadarSectorPath(HIGH_RISK_MARKER_POSITION)} />
+          </svg>
+
+          <svg
+            className="radar-danger-sector"
+            viewBox="0 0 100 100"
+            aria-hidden="true"
+          >
+            <path d={getRadarSectorPath(RESTRICTED_MARKER_POSITION)} />
+          </svg>
+
+          <div className="radar-vessel">
+            <span />
+          </div>
+
+          <div className="radar-contact threat-a">
+            <span className="radar-threat" />
+            <span className="radar-label label-threat-a">RESTRICTED</span>
+          </div>
+
+          <div className="radar-contact threat-b">
+            <span className="radar-threat" />
+            <span className="radar-label label-threat-b">HIGH RISK</span>
+          </div>
+
+          <div className="radar-contact threat-c">
+            <span className="radar-threat" />
+          </div>
+
+          <div className="radar-label label-vessel">VESSEL</div>
+
+          <div className="radar-center">
+            <span>YOU</span>
+          </div>
+        </div>
+
+        {/* SAFETY CARDS */}
+
+        <div className="safety-cards">
+          <div className="safety-card">
+            <span className="safety-card-index">01</span>
+
+            <span className="safety-card-label">MARITIME BOUNDARY</span>
+
+            <strong>SAFE</strong>
+
+            <p>Vessel remains within the permitted navigation zone.</p>
+          </div>
+
+          <div className="safety-card warning">
+            <span className="safety-card-index">02</span>
+
+            <span className="safety-card-label">THREAT DETECTION</span>
+
+            <strong>02 ALERTS</strong>
+
+            <p>Potential restricted areas detected ahead.</p>
+          </div>
+
+          <div className="safety-card">
+            <span className="safety-card-index">03</span>
+
+            <span className="safety-card-label">AI RESPONSE</span>
+
+            <strong>ACTIVE</strong>
+
+            <p>Neythal is continuously evaluating the safest route.</p>
+          </div>
+        </div>
+
+        <div className="safety-footer">
+          <span>● SAFETY MONITORING ACTIVE</span>
+
+          <span>RADAR / ONLINE</span>
+
+          <span>THREAT ANALYSIS / LIVE</span>
+        </div>
+      </section>
+
+      {/* =====================================================
+          SECTION 05 — FISHING INTELLIGENCE
+      ===================================================== */}
+
+      <section id="fishing" className="fishing-section">
+        <MarineFishingIntelligence onOceanReadingsChange={setOceanReadings} />
+
+      </section>
+
+      {/* =====================================================
+          SECTION 06 — FUNCTIONAL MARITIME MAP
+      ===================================================== */}
+
+      <section id="live-map" className="maritime-map-section">
+        <MaritimeMap
+          onSafetyChange={handleSafetyChange}
+          alertLanguage={alertLanguage}
+          onAlertLanguageChange={setAlertLanguage}
+          voiceStatus={voiceStatus}
+        />
+      </section>
+
+      <NeythalChatbot
+        safetyZone={safetyZone}
+        open={chatOpen}
+        setOpen={setChatOpen}
+      />
+      {showSOS && (
+  <div
+    className="sos-overlay"
+    onClick={() => setShowSOS(false)}
+  >
+    <div
+      className="sos-dashboard"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <button
+        className="sos-close"
+        onClick={() => setShowSOS(false)}
+      >
+        ×
+      </button>
+
+      <div className="sos-header">
+        <div className="sos-warning-icon">
+          !
+        </div>
+
+        <div>
+          <span>SOS / EMERGENCY SYSTEM</span>
+          <h2>DANGER DETECTED</h2>
+        </div>
+      </div>
+
+      <div className="sos-status">
+        <span className="sos-status-dot" />
+        IMMEDIATE ATTENTION REQUIRED
+      </div>
+
+      <div className="sos-grid">
+
+        <div className="sos-card">
+          <span>THREAT STATUS</span>
+          <strong>DANGER ZONE</strong>
+        </div>
+
+        <div className="sos-card">
+          <span>VESSEL STATUS</span>
+          <strong>AT RISK</strong>
+        </div>
+
+        <div className="sos-card">
+          <span>GPS MONITORING</span>
+          <strong>ACTIVE</strong>
+        </div>
+
+        <div className="sos-card">
+          <span>EMERGENCY LINK</span>
+          <strong>READY</strong>
+        </div>
+
+      </div>
+
+      <div className="sos-message">
+        <strong>
+          ⚠ DANGER ZONE DETECTED AHEAD
+        </strong>
+
+        <p>
+          Your vessel is approaching a detected maritime
+          danger area. Review the vessel position and take
+          appropriate safety action.
+        </p>
+      </div>
+
+      <button
+        className="sos-action-button"
+        onClick={() => setShowSOS(false)}
+      >
+        ACKNOWLEDGE ALERT
+      </button>
+    </div>
+  </div>
+)}
+    </main>
+  );
+}
